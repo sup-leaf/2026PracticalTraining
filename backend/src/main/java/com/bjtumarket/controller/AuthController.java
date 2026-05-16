@@ -2,7 +2,9 @@ package com.bjtumarket.controller;
 
 import com.bjtumarket.entity.User;
 import com.bjtumarket.service.UserService;
+import com.bjtumarket.util.JwtUtil;
 import com.bjtumarket.vo.LoginRequest;
+import com.bjtumarket.vo.LoginUser;
 import com.bjtumarket.vo.RegisterRequest;
 import com.bjtumarket.vo.Result;
 import org.springframework.beans.BeanUtils;
@@ -17,14 +19,21 @@ public class AuthController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private JwtUtil jwtUtil;
+
     @PostMapping("/login")
-    public Result<User> login(@RequestBody LoginRequest request) {
+    public Result<LoginUser> login(@RequestBody LoginRequest request) {
         User user = userService.login(request.getUsername(), request.getPassword(), request.getUserType());
         if (user == null) {
             return Result.error(401, "用户名或密码错误");
         }
+        String token = jwtUtil.generateToken(user.getId(), user.getUserType());
         user.setPassword(null);
-        return Result.success(user);
+        LoginUser loginUser = new LoginUser();
+        loginUser.setToken(token);
+        loginUser.setUser(user);
+        return Result.success(loginUser);
     }
 
     @PostMapping("/register")
@@ -54,6 +63,9 @@ public class AuthController {
         boolean success = userService.register(user);
         if (!success) {
             return Result.error("用户名已存在");
+        }
+        if (userType == 2) {
+            return Result.success("注册成功，请等待管理员审核");
         }
         return Result.success("注册成功");
     }

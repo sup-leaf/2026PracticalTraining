@@ -1,13 +1,11 @@
 package com.bjtumarket.controller;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.bjtumarket.entity.Delivery;
 import com.bjtumarket.service.DeliveryService;
 import com.bjtumarket.vo.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
+import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
 
 @RestController
@@ -19,8 +17,9 @@ public class DeliveryController {
     private DeliveryService deliveryService;
 
     @PostMapping("/apply")
-    public Result<String> apply(@RequestParam Long jobId, @RequestParam Long resumeId) {
-        boolean success = deliveryService.apply(jobId, resumeId);
+    public Result<String> apply(@RequestParam Long jobId, HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        boolean success = deliveryService.apply(jobId, userId);
         if (!success) {
             return Result.error("投递失败或已投递");
         }
@@ -32,48 +31,38 @@ public class DeliveryController {
             @PathVariable Long jobId,
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size) {
-        Page<Delivery> pageResult = deliveryService.getJobDeliveries(jobId, page, size);
-        Map<String, Object> result = new HashMap<>();
-        result.put("records", pageResult.getRecords());
-        result.put("total", pageResult.getTotal());
-        return Result.success(result);
+        return Result.success(deliveryService.getJobDeliveries(jobId, page, size));
     }
 
     @GetMapping("/my")
     public Result<Map<String, Object>> getMyDeliveries(
-            @RequestParam Long resumeId,
+            HttpServletRequest request,
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size) {
-        Page<Delivery> pageResult = deliveryService.getMyDeliveries(resumeId, page, size);
-        Map<String, Object> result = new HashMap<>();
-        result.put("records", pageResult.getRecords());
-        result.put("total", pageResult.getTotal());
-        return Result.success(result);
+        Long userId = (Long) request.getAttribute("userId");
+        return Result.success(deliveryService.getMyDeliveries(userId, page, size));
     }
 
     @GetMapping("/publisher")
     public Result<Map<String, Object>> getDeliveriesByPublisher(
-            @RequestParam Long publisherId,
+            HttpServletRequest request,
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size) {
-        Page<Delivery> pageResult = deliveryService.getDeliveriesByPublisher(publisherId, page, size);
-        Map<String, Object> result = new HashMap<>();
-        result.put("records", pageResult.getRecords());
-        result.put("total", pageResult.getTotal());
-        return Result.success(result);
+        Long userId = (Long) request.getAttribute("userId");
+        return Result.success(deliveryService.getDeliveriesByPublisher(userId, page, size));
     }
 
     @PutMapping("/status")
     public Result<String> updateStatus(
             @RequestParam String deliveryId,
-            @RequestParam String publisherId,
             @RequestParam String deliveryStatus,
-            @RequestParam(required = false) String note) {
+            @RequestParam(required = false) String note,
+            HttpServletRequest request) {
         try {
             Long dId = Long.parseLong(deliveryId);
-            Long pId = Long.parseLong(publisherId);
+            Long userId = (Long) request.getAttribute("userId");
             Integer dStatus = Integer.parseInt(deliveryStatus);
-            boolean success = deliveryService.updateStatus(dId, pId, dStatus, note);
+            boolean success = deliveryService.updateStatus(dId, userId, dStatus, note);
             if (!success) {
                 return Result.error("更新失败");
             }

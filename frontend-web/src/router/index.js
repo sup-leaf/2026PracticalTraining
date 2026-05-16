@@ -2,6 +2,11 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Login from '../views/Login.vue'
 import Register from '../views/Register.vue'
 import Home from '../views/Home.vue'
+import EnterpriseAudit from '../views/EnterpriseAudit.vue'
+import ResearchManage from '../views/ResearchManage.vue'
+import ResumeFlow from '../views/ResumeFlow.vue'
+import DataScreen from '../views/DataScreen.vue'
+import JobManage from '../views/JobManage.vue'
 import JobList from '../views/JobList.vue'
 import JobPublish from '../views/JobPublish.vue'
 import Deliveries from '../views/Deliveries.vue'
@@ -16,7 +21,12 @@ const routes = [
     component: Home,
     redirect: '/home/jobs',
     children: [
+      { path: 'enterprise-audit', component: EnterpriseAudit },
+      { path: 'research', component: ResearchManage },
+      { path: 'resume-flow', component: ResumeFlow },
+      { path: 'data-screen', component: DataScreen },
       { path: 'jobs', component: JobList },
+      { path: 'job-manage', component: JobManage },
       { path: 'publish', component: JobPublish },
       { path: 'deliveries', component: Deliveries },
       { path: 'resume', component: Resume }

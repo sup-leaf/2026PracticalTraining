@@ -5,7 +5,7 @@
         <span>校园集市</span>
       </div>
       <div class="user-info">
-        <span>{{ userTypeText }}: {{ userId }}</span>
+        <span>{{ userTypeText }}: {{ userName || userId }}</span>
       </div>
       <el-menu
         :default-active="activeMenu"
@@ -15,22 +15,100 @@
         text-color="#bfcbd9"
         active-text-color="#409EFF"
       >
-        <el-menu-item index="/home/jobs">
-          <el-icon><List /></el-icon>
-          <span>岗位管理</span>
-        </el-menu-item>
-        <el-menu-item index="/home/publish" v-if="userType !== 1">
-          <el-icon><Plus /></el-icon>
-          <span>发布岗位</span>
-        </el-menu-item>
-        <el-menu-item index="/home/deliveries">
-          <el-icon><Document /></el-icon>
-          <span>投递管理</span>
-        </el-menu-item>
-        <el-menu-item index="/home/resume">
-          <el-icon><User /></el-icon>
-          <span>我的简历</span>
-        </el-menu-item>
+        <template v-if="userType === 3">
+          <el-sub-menu index="sub-dashboard">
+            <template #title>
+              <el-icon><TrendCharts /></el-icon>
+              <span>数据看板</span>
+            </template>
+            <el-menu-item index="/home/data-screen">
+              <el-icon><PieChart /></el-icon>
+              <span>人才供需大屏</span>
+            </el-menu-item>
+          </el-sub-menu>
+
+          <el-sub-menu index="sub-enterprise">
+            <template #title>
+              <el-icon><OfficeBuilding /></el-icon>
+              <span>企业管理</span>
+            </template>
+            <el-menu-item index="/home/enterprise-audit">
+              <el-icon><Checked /></el-icon>
+              <span>企业入驻审核</span>
+            </el-menu-item>
+          </el-sub-menu>
+
+          <el-sub-menu index="sub-job">
+            <template #title>
+              <el-icon><Briefcase /></el-icon>
+              <span>岗位中心</span>
+            </template>
+            <el-menu-item index="/home/jobs">
+              <el-icon><List /></el-icon>
+              <span>岗位管理</span>
+            </el-menu-item>
+            <el-menu-item index="/home/publish">
+              <el-icon><Plus /></el-icon>
+              <span>发布岗位</span>
+            </el-menu-item>
+          </el-sub-menu>
+
+          <el-sub-menu index="sub-delivery">
+            <template #title>
+              <el-icon><Message /></el-icon>
+              <span>投递中心</span>
+            </template>
+            <el-menu-item index="/home/deliveries">
+              <el-icon><Document /></el-icon>
+              <span>投递管理</span>
+            </el-menu-item>
+            <el-menu-item index="/home/resume-flow">
+              <el-icon><DocumentChecked /></el-icon>
+              <span>简历面试流转</span>
+            </el-menu-item>
+          </el-sub-menu>
+
+          <el-sub-menu index="sub-research">
+            <template #title>
+              <el-icon><Reading /></el-icon>
+              <span>科研竞赛</span>
+            </template>
+            <el-menu-item index="/home/research">
+              <el-icon><TrophyBase /></el-icon>
+              <span>科研竞赛管理</span>
+            </el-menu-item>
+          </el-sub-menu>
+
+          <el-sub-menu index="sub-profile">
+            <template #title>
+              <el-icon><User /></el-icon>
+              <span>个人中心</span>
+            </template>
+            <el-menu-item index="/home/resume">
+              <el-icon><EditPen /></el-icon>
+              <span>我的简历</span>
+            </el-menu-item>
+          </el-sub-menu>
+        </template>
+
+        <template v-else>
+          <el-menu-item index="/home/jobs">
+            <el-icon><List /></el-icon>
+            <span>岗位管理</span>
+          </el-menu-item>
+          <el-menu-item index="/home/publish" v-if="userType !== 1">
+            <el-icon><Plus /></el-icon>
+            <span>发布岗位</span>
+          </el-menu-item>
+          <el-menu-item index="/home/deliveries">
+            <el-icon><Document /></el-icon>
+            <span>投递管理</span>
+          </el-menu-item>
+          <el-menu-item index="/home/resume">
+            <el-icon><User /></el-icon>
+            <span>我的简历</span>
+          </el-menu-item>
+        </template>
       </el-menu>
     </el-aside>
     <el-container>
@@ -39,7 +117,7 @@
           <span class="page-title">{{ pageTitle }}</span>
         </div>
         <div class="header-right">
-          <span class="username">当前用户: {{ userId }}</span>
+          <span class="username">当前用户: {{ userName || userId }}</span>
           <el-button type="danger" size="small" @click="logout">退出登录</el-button>
         </div>
       </el-header>
@@ -51,16 +129,25 @@
 </template>
 
 <script>
-import { List, Plus, Document, User } from '@element-plus/icons-vue'
+import {
+  OfficeBuilding, Reading, DocumentChecked, PieChart,
+  List, Plus, Document, User, TrendCharts, Briefcase,
+  Message, Checked, TrophyBase, EditPen
+} from '@element-plus/icons-vue'
 
 export default {
   name: 'Home',
-  components: { List, Plus, Document, User },
+  components: {
+    OfficeBuilding, Reading, DocumentChecked, PieChart,
+    List, Plus, Document, User, TrendCharts, Briefcase,
+    Message, Checked, TrophyBase, EditPen
+  },
   data() {
     return {
-      activeMenu: '/jobs',
+      activeMenu: '/home/jobs',
       userType: null,
-      userId: null
+      userId: null,
+      userName: ''
     }
   },
   computed: {
@@ -71,7 +158,12 @@ export default {
     pageTitle() {
       const path = this.$route.path
       const titles = {
+        '/home/enterprise-audit': '企业入驻审核',
+        '/home/research': '科研竞赛管理',
+        '/home/resume-flow': '简历面试流转',
+        '/home/data-screen': '人才供需大屏',
         '/home/jobs': '岗位管理',
+        '/home/job-manage': '岗位管理',
         '/home/publish': '发布岗位',
         '/home/deliveries': '投递管理',
         '/home/resume': '我的简历'
@@ -82,10 +174,8 @@ export default {
   mounted() {
     this.userType = parseInt(localStorage.getItem('userType') || 1)
     this.userId = localStorage.getItem('userId')
+    this.userName = localStorage.getItem('userName') || ''
     this.activeMenu = this.$route.path
-    if (this.$route.path.startsWith('/home/')) {
-      this.activeMenu = this.$route.path
-    }
   },
   watch: {
     '$route.path'(path) {
@@ -130,15 +220,23 @@ export default {
   flex: 1;
   border-right: none !important;
 }
-.menu .el-menu-item {
+.menu :deep(.el-sub-menu__title) {
   height: 50px;
   line-height: 50px;
 }
-.menu .el-menu-item.is-active {
+.menu :deep(.el-sub-menu__title):hover {
+  background: #263445 !important;
+}
+.menu :deep(.el-menu-item) {
+  height: 50px;
+  line-height: 50px;
+  min-width: 200px;
+}
+.menu :deep(.el-menu-item.is-active) {
   background: #409EFF !important;
   color: #fff !important;
 }
-.menu .el-menu-item:hover {
+.menu :deep(.el-menu-item):hover {
   background: #263445 !important;
 }
 .header {

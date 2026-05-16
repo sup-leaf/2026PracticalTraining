@@ -1,102 +1,228 @@
-# 校园集市 - 后端说明
+# 校园集市 - 后端文档
 
-## 项目简介
-校园集市是北京交通大学"专业课程综合实训"项目，为校内学生提供实习招聘、科研选人、竞赛组队等人才供需与科创协作服务。
+> 北京交通大学 "专业课程综合实训" —— 校内一体化人才供需与科创协作平台
+>
+> 学生端小程序（规划中） + Vue3 Web 管理端 + SpringBoot 后端
 
-## 技术栈
-- Spring Boot 2.7.18
-- MyBatis-Plus 3.5.3.1
-- MySQL 8.0
-- Redis
+---
 
-## 项目结构
+## 给后端开发人员
+
+### 技术栈
+
+| 组件 | 版本 | 说明 |
+|------|------|------|
+| Java | 17 | |
+| Spring Boot | 2.7.18 | |
+| MyBatis-Plus | 3.5.3.1 | LambdaQueryWrapper，无 XML |
+| MySQL | 8.0 | |
+| JWT | jjwt 0.9.1 | 登录鉴权 |
+| Lombok | latest | |
+
+### 项目结构（只列出源码）
+
 ```
-backend/
-├── src/main/java/com/bjtumarket/
-│   ├── controller/    # 控制层
-│   ├── service/      # 业务层
-│   ├── mapper/       # 数据访问层
-│   ├── entity/       # 实体类
-│   ├── config/       # 配置类
-│   └── vo/           # 视图对象
-├── src/main/resources/
-│   ├── application.yml  # 配置文件
-│   └── mapper/          # MyBatis XML
-├── sql/              # 数据库脚本
-├── uploads/         # 上传文件目录
-└── README.md       # 说明文件
+src/main/java/com/bjtumarket/
+├── MarketApplication.java              # 启动入口
+├── config/
+│   ├── CorsConfig.java                # 跨域
+│   ├── WebConfig.java                 # uploads 静态资源映射
+│   ├── LoginInterceptor.java          # JWT 拦截器
+│   └── InterceptorConfig.java         # 拦截注册（排除 /api/auth/**）
+├── util/
+│   └── JwtUtil.java                   # JWT 签发/校验
+├── entity/
+│   ├── User.java / Job.java / Resume.java / Delivery.java
+├── mapper/
+│   ├── UserMapper.java                # + countStudents 等统计 @Select
+│   ├── JobMapper.java                 # + topEnterprises / hotJobs
+│   ├── ResumeMapper.java              # + countByMajor
+│   └── DeliveryMapper.java            # + deliveryTrend
+├── service/
+│   ├── UserService.java       / impl
+│   ├── JobService.java        / impl
+│   ├── ResumeService.java     / impl
+│   ├── DeliveryService.java   / impl   # buildResult() 附带简历+岗位信息
+│   └── AdminService.java      / impl   # 企业审核 + 数据统计
+├── controller/
+│   ├── AuthController.java            # POST login(返回JWT) / register
+│   ├── JobController.java             # CRUD + 分页列表
+│   ├── ResumeController.java          # GET detail / POST save
+│   ├── DeliveryController.java        # apply / my / publisher / status
+│   ├── AdminController.java           # 企业审核 / 5个stats接口
+│   └── FileController.java            # PDF/Word 上传
+└── vo/
+    ├── Result.java                    # {code, message, data}
+    ├── LoginRequest.java / RegisterRequest.java
+    └── LoginUser.java                 # {token, user}
 ```
 
-## 已完成功能
+### 当前进度一览
 
-### 1. 用户模块 (第二阶段)
-- [x] 用户注册（学生/企业/教师三种身份）
-- [x] 用户登录
+| 模块 | 进度 |
+|------|------|
+| JWT 登录鉴权 | ✅ |
+| 多角色注册（学生/企业待审/教师） | ✅ |
+| 岗位 CRUD + 分页搜索 | ✅ |
+| 简历在线编辑 + 文件上传 | ✅ |
+| 投递流程（5 状态 + 防重复） | ✅ |
+| 企业入驻审核 | ✅ |
+| 数据大屏（概览/专业率/趋势/Top5） | ✅ |
+| 科研项目选人 | ❌ |
+| 竞赛组队 | ❌ |
+| 实习全过程管理 | ❌ |
+| 全局异常处理 / 短信 / 定时任务 / COS | ❌ |
 
-### 2. 岗位模块 (第三阶段)
-- [x] 岗位发布（企业/教师）
-- [x] 岗位列表查询（分页、筛选、关键词搜索）
-- [x] 岗位详情查看
-- [x] 岗位删除
-- [x] 我的发布列表
+详见 `进度管理.md`（35 项任务逐项状态 + 待补充空行）。
 
-### 3. 简历模块 (第四阶段)
-- [x] 简历保存/更新
-- [x] 简历查看
-- [x] 文件上传简历
+### 下一步开发建议（按优先级）
 
-### 4. 投递模块 (第五阶段)
-- [x] 投递岗位
-- [x] 投递列表查询
-- [x] 投递状态管理（待查看→已查看→面试中→已录用/已拒绝）
+1. **科研项目选人模块**（Phase 4）—— 教师发招募 → 学生申请 → 教师审核
+2. **竞赛组队模块**（Phase 5）—— 队长发招募 → 标签匹配 → 入队审核
+3. **智能初筛**（Phase 3.9）—— 按 GPA / 专业 / 技能标签筛选投递
+4. **全局异常处理** —— `@ControllerAdvice` 统一拦截
 
-## 接口文档
+### 启动
 
-### 用户模块
-| 接口 | 方法 | 说明 |
-|------|------|------|
-| /api/auth/register | POST | 用户注册 |
-| /api/auth/login | POST | 用户登录 |
-
-### 岗位模块
-| 接口 | 方法 | 说明 |
-|------|------|------|
-| /api/job/list | GET | 岗位列表 |
-| /api/job/detail/{id} | GET | 岗位详情 |
-| /api/job/publish | POST | 发布岗位 |
-| /api/job/delete/{id} | DELETE | 删除岗位 |
-| /api/job/my | GET | 我的发布 |
-
-### 简历模块
-| 接口 | 方法 | 说明 |
-|------|------|------|
-| /api/resume/save | POST | 保存简历 |
-| /api/resume/detail | GET | 查看简历 |
-| /api/file/upload | POST | 上传文件 |
-
-### 投递模块
-| 接口 | 方法 | 说明 |
-|------|------|------|
-| /api/delivery/apply | POST | 投递岗位 |
-| /api/delivery/my | GET | 我的投递 |
-| /api/delivery/job/{jobId} | GET | 岗位投递列表 |
-| /api/delivery/status | PUT | 更新投递状态 |
-
-## 数据库表
-- t_user - 用户表
-- t_job - 岗位表
-- t_resume - 简历表
-- t_delivery - 投递记录表
-
-## 启动命令
 ```bash
-cd D:\dasanxiaShixun\project\backend
+cd backend
+mysql -u root -p < sql/init.sql
+mysql -u root -p -e "USE campus_market; INSERT INTO t_user (username,password,user_type,teacher_no,status) VALUES ('admin',MD5(MD5('123456')),3,'T001',1);"
+# 修改 application.yml 中你的 MySQL 密码
 mvn spring-boot:run
 ```
 
-## 开发周期（立项文档）
-- 第1-2周：需求确认、原型设计、数据库设计
-- 第3-4周：后端核心开发
-- 第5-6周：前端开发
-- 第7周：前后端联调、内部测试
-- 第8-9周：小范围用户验证
+---
+
+## 给前端开发人员
+
+### 后端地址
+
+| 环境 | 地址 |
+|------|------|
+| 开发 | `http://localhost:8080` |
+| 前端 Vite 代理 | `/api/*` → 8080，`/uploads/*` → 8080 |
+
+### 鉴权方式
+
+```
+登录 → 拿到 token → 每次请求带 Authorization: Bearer <token>
+```
+
+- 无需鉴权：`POST /api/auth/login`、`POST /api/auth/register`
+- 需要鉴权：其余所有 `/api/**` 接口
+- 教师专属：`/api/admin/**` 额外要求 `userType == 3`
+- token 有效期：24 小时
+- 上传文件时：`el-upload` 需通过 `:headers="{ Authorization: 'Bearer ' + token }"` 传递
+
+### 统一响应格式
+
+```json
+// 成功
+{ "code": 200, "message": "success", "data": <具体数据> }
+
+// 登录成功
+{ "code": 200, "data": { "token": "eyJ...", "user": { "id":1, "username":"admin", "userType":3, ... } } }
+
+// 错误
+{ "code": 500, "message": "错误描述" }
+// 或
+{ "code": 401, "message": "用户名或密码错误" }
+```
+
+### 全部接口速查（23 个）
+
+#### 认证 —— `/api/auth`
+```
+POST /api/auth/login         { username, password(MD5前端加密), userType }  →  { token, user }
+POST /api/auth/register      { username, password, userType, ... }          →  { code, message }
+```
+
+#### 岗位 —— `/api/job`
+```
+GET    /api/job/list?page=1&size=10&jobType=1&keyword=Java  →  { records[], total, pages }
+GET    /api/job/detail/{id}                                     →  Job 对象
+POST   /api/job/publish      { title, jobType, location, ... }  →  发布成功/失败
+PUT    /api/job/update        { id, title, ... }                  →  更新（仅限自己的）
+DELETE /api/job/delete/{id}                                      →  删除（仅限自己的）
+GET    /api/job/my?page=1&size=10                                →  我发布的岗位
+```
+
+#### 简历 —— `/api/resume`
+```
+GET    /api/resume/detail     →  Resume 对象（JWT 自动识别用户）
+POST   /api/resume/save       { name, major, skills, fileUrl, ... }  →  保存成功
+```
+
+#### 投递 —— `/api/delivery`
+```
+POST   /api/delivery/apply?jobId={id}                          →  投递（防重复，需先有简历）
+GET    /api/delivery/my?page=1&size=10                          →  我的投递 [{id, jobTitle, status, hrNote, createTime}]
+GET    /api/delivery/publisher?page=1&size=10                   →  我收到的投递 [{id, jobTitle, studentName, studentMajor, studentPhone, ...}]
+GET    /api/delivery/job/{jobId}?page=1&size=10                 →  某岗位的投递（含申请人信息）
+PUT    /api/delivery/status?deliveryId={id}&deliveryStatus={0-4}&note={备注}  →  更新状态
+```
+
+`deliveryStatus` 状态流转：`0待查看 → 1已查看 → 2面试中 → 3已录用 / 4已拒绝`
+
+`/publisher` 和 `/job/{jobId}` 接口返回的每条投递都携带申请人信息：
+```json
+{
+  "id": 3, "jobId": 1, "resumeId": 2, "status": 1,
+  "jobTitle": "Java开发实习",
+  "studentName": "张三", "studentMajor": "计算机科学",
+  "studentPhone": "138xxxx", "studentEmail": "zhang@bjtu.edu.cn",
+  "studentSkills": "Java,Spring", "studentAwards": "国赛二等奖",
+  "studentGrade": "大三", "studentFileUrl": "/uploads/2026/05/16/xxx.pdf"
+}
+```
+
+#### 管理员 —— `/api/admin`（仅教师 userType=3）
+```
+GET   /api/admin/enterprise/list?page=1&size=10&status=0&keyword=华为  → 企业列表
+PUT   /api/admin/enterprise/audit/{id}?status=1                         → 审核（1通过/2拒绝）
+GET   /api/admin/stats/overview        → {studentCount, enterpriseCount, jobCount, deliveryCountThisMonth, internshipRate}
+GET   /api/admin/stats/major           → {majors: [{major, studentCount, acceptedCount, rate}]}
+GET   /api/admin/stats/trend           → {trend: [{date, count}]}  近7天
+GET   /api/admin/stats/top-enterprises → {enterprises: [{rank, name, jobCount, applicantCount}]}
+GET   /api/admin/stats/hot-jobs        → {jobs: [{rank, title, company, applicants}]}
+```
+
+#### 文件 —— `/api/file`
+```
+POST  /api/file/upload        multipart/form-data, file字段  → 文件URL（PDF/Word，≤5MB）
+```
+
+### 状态码速查
+
+| 字段 | 值 | 含义 |
+|------|----|------|
+| userType | 1 / 2 / 3 | 学生 / 企业 / 教师 |
+| jobType | 1 / 2 / 3 | 实习 / 全职 / 科研助理 |
+| deliveryStatus | 0→1→2→3/4 | 待查看→已查看→面试中→已录用/已拒绝 |
+| userStatus | 0 / 1 / 2 | 待审核 / 正常 / 已拒绝 |
+
+---
+
+## 数据库表
+
+| 表 | 说明 | 核心字段 |
+|----|------|---------|
+| `t_user` | 用户 | username, password(MD5), user_type, status(企业0待审), company_name |
+| `t_job` | 岗位 | title, job_type, publisher_id, status, view_count, delivery_count |
+| `t_resume` | 简历 | user_id(唯一), name, major, gpa, skills, file_url |
+| `t_delivery` | 投递 | job_id, resume_id, status(0-4), hr_note |
+
+建表脚本：`sql/init.sql`
+
+---
+
+## 成员
+
+| 角色 | 姓名 | 学号 |
+|------|------|------|
+| 组长 | 马勇 | 23301130 |
+| 组员 | 薛探昕 | 23301141 |
+| 组员 | 黄冠宇 | 23301124 |
+| 组员 | 徐健智 | 23301139 |
+| 组员 | 郭书豪 | 23301149 |

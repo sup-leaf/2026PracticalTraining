@@ -3,18 +3,31 @@
     <el-card>
       <h3>投递管理</h3>
 
-      <el-tabs v-model="activeTab" v-if="userType === 1">
-        <el-tab-pane label="我的投递" name="my" />
-      </el-tabs>
-
-      <el-table :data="deliveries" border style="margin-top: 20px">
-        <el-table-column prop="id" label="ID" width="60" />
-        <el-table-column prop="jobId" label="岗位ID" width="80" />
-        <el-table-column prop="jobId" label="岗位名称" width="150">
+      <el-table :data="deliveries" border style="margin-top: 20px" v-loading="loading">
+        <el-table-column type="expand" v-if="userType !== 1">
           <template #default="{ row }">
-            {{ getJobTitle(row.jobId) }}
+            <div class="expand-info">
+              <el-descriptions :column="3" border size="small">
+                <el-descriptions-item label="姓名">{{ row.studentName }}</el-descriptions-item>
+                <el-descriptions-item label="专业">{{ row.studentMajor }}</el-descriptions-item>
+                <el-descriptions-item label="年级">{{ row.studentGrade }}</el-descriptions-item>
+                <el-descriptions-item label="手机">{{ row.studentPhone }}</el-descriptions-item>
+                <el-descriptions-item label="邮箱">{{ row.studentEmail }}</el-descriptions-item>
+                <el-descriptions-item label="技能">{{ row.studentSkills }}</el-descriptions-item>
+                <el-descriptions-item label="获奖" :span="3">{{ row.studentAwards }}</el-descriptions-item>
+                <el-descriptions-item label="简历文件" :span="3" v-if="row.studentFileUrl">
+                  <el-link :href="row.studentFileUrl" target="_blank" type="primary">
+                    <el-icon><Document /></el-icon> 查看简历文件
+                  </el-link>
+                </el-descriptions-item>
+              </el-descriptions>
+            </div>
           </template>
         </el-table-column>
+        <el-table-column prop="id" label="ID" width="60" />
+        <el-table-column v-if="userType !== 1" prop="studentName" label="申请人" width="100" />
+        <el-table-column v-if="userType !== 1" prop="studentMajor" label="专业" width="120" />
+        <el-table-column prop="jobTitle" label="岗位名称" min-width="150" />
         <el-table-column prop="status" label="状态" width="100">
           <template #default="{ row }">
             <el-tag :type="statusTypes[row.status]">
@@ -23,11 +36,15 @@
           </template>
         </el-table-column>
         <el-table-column prop="hrNote" label="备注" />
-        <el-table-column prop="createTime" label="投递时间" width="180" />
-        <el-table-column label="操作" width="200" v-if="userType !== 1">
+        <el-table-column prop="createTime" label="投递时间" width="170">
+          <template #default="{ row }">
+            {{ formatTime(row.createTime) }}
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="200" fixed="right" v-if="userType !== 1">
           <template #default="{ row }">
             <el-button size="small" @click="updateStatus(row, 1)">已查看</el-button>
-            <el-button size="small" type="success" @click="updateStatus(row, 2)">面试中</el-button>
+            <el-button size="small" type="success" @click="showNoteDialog(row, 2)">面试中</el-button>
             <el-button size="small" type="danger" @click="updateStatus(row, 4)">拒绝</el-button>
           </template>
         </el-table-column>
@@ -42,11 +59,11 @@
       />
     </el-card>
 
-    <el-dialog v-model="noteVisible" title="发送通知" width="400px">
-      <el-input v-model="note" type="textarea" :rows="3" placeholder="请输入面试通知或备注" />
+    <el-dialog v-model="noteVisible" title="通知学生面试" width="400px">
+      <el-input v-model="note" type="textarea" :rows="3" placeholder="请输入面试时间、地点或其它备注" />
       <template #footer>
         <el-button @click="noteVisible = false">取消</el-button>
-        <el-button type="primary" @click="sendNote">确定</el-button>
+        <el-button type="primary" @click="confirmNote">确定并通知</el-button>
       </template>
     </el-dialog>
   </div>
@@ -54,22 +71,24 @@
 
 <script>
 import api from '../api'
+import { Document } from '@element-plus/icons-vue'
 
 export default {
   name: 'Deliveries',
+  components: { Document },
   data() {
     return {
+      loading: false,
       userType: 1,
-      activeTab: 'my',
       deliveries: [],
       page: 1,
       total: 0,
-      jobTitles: {},
       statusText: ['待查看', '已查看', '面试中', '已录用', '已拒绝'],
-      statusTypes: ['', '', 'success', 'danger', 'info'],
+      statusTypes: ['info', '', 'success', '', 'danger'],
       noteVisible: false,
       note: '',
-      currentDelivery: null
+      pendingDelivery: null,
+      pendingStatus: null
     }
   },
   mounted() {
@@ -78,50 +97,42 @@ export default {
   },
   methods: {
     async loadDeliveries() {
-      const userId = localStorage.getItem('userId')
-      if (this.userType === 1) {
-        const resumeRes = await api.getResume(userId)
-        if (resumeRes.data && resumeRes.data.id) {
-          const res = await api.getMyDeliveries(resumeRes.data.id)
-          this.deliveries = res.data.records
-          this.total = res.data.total
-          this.loadJobTitles()
+      this.loading = true
+      try {
+        let res
+        if (this.userType === 1) {
+          res = await api.getMyDeliveries()
+        } else {
+          res = await api.getPublisherDeliveries()
         }
-      } else {
-        const res = await api.getPublisherDeliveries(userId)
-        this.deliveries = res.data.records
-        this.total = res.data.total
-        this.loadJobTitles()
+        this.deliveries = res.data.records || []
+        this.total = res.data.total || 0
+      } catch (e) {
+        this.$message.error('加载失败')
+      } finally {
+        this.loading = false
       }
-    },
-    async loadJobTitles() {
-      const jobIds = [...new Set(this.deliveries.map(d => d.jobId))]
-      this.jobTitles = {}
-      for (const jobId of jobIds) {
-        try {
-          const res = await api.getJobDetail(jobId)
-          this.jobTitles[jobId] = res.data.title
-        } catch (e) {
-          this.jobTitles[jobId] = '未知岗位'
-        }
-      }
-    },
-    getJobTitle(jobId) {
-      return this.jobTitles[jobId] || '加载中...'
     },
     async updateStatus(row, status) {
-      const publisherId = localStorage.getItem('userId')
-      await api.updateDeliveryStatus({
-        deliveryId: row.id,
-        publisherId: publisherId,
-        deliveryStatus: status,
-        note: ''
-      })
+      await api.updateDeliveryStatus(row.id, status, '')
       this.$message.success('更新成功')
       this.loadDeliveries()
     },
-    sendNote() {
-      // TODO: 发送通知功能
+    showNoteDialog(row, status) {
+      this.pendingDelivery = row
+      this.pendingStatus = status
+      this.note = ''
+      this.noteVisible = true
+    },
+    async confirmNote() {
+      await api.updateDeliveryStatus(this.pendingDelivery.id, this.pendingStatus, this.note)
+      this.$message.success('已通知')
+      this.noteVisible = false
+      this.loadDeliveries()
+    },
+    formatTime(time) {
+      if (!time) return ''
+      return time.replace('T', ' ')
     }
   }
 }
@@ -130,5 +141,8 @@ export default {
 <style scoped>
 .deliveries h3 {
   margin-bottom: 20px;
+}
+.expand-info {
+  padding: 10px 20px;
 }
 </style>

@@ -109,13 +109,12 @@ export default {
       this.detailVisible = true
     },
     async handleApply(row) {
-      const userId = localStorage.getItem('userId')
-      const resumeRes = await api.getResume(userId)
+      const resumeRes = await api.getResume()
       if (!resumeRes.data || !resumeRes.data.id) {
         this.$message.error('请先完善简历')
         return
       }
-      await api.applyJob(row.id, resumeRes.data.id)
+      await api.applyJob(row.id)
       this.$message.success('投递成功')
       this.loadJobs()
     },
@@ -126,8 +125,7 @@ export default {
           cancelButtonText: '取消',
           type: 'warning'
         })
-        const userId = localStorage.getItem('userId')
-        await api.deleteJob(row.id, userId)
+        await api.deleteJob(row.id)
         this.$message.success('删除成功')
         this.loadJobs()
       } catch (e) {

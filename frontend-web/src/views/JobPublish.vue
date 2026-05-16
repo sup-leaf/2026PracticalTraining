@@ -70,10 +70,7 @@ export default {
         this.$message.error('请填写必填项')
         return
       }
-      const publisherId = localStorage.getItem('userId')
-      const userType = parseInt(localStorage.getItem('userType'))
-      this.form.publisherType = userType === 2 ? 1 : 2
-      await api.publishJob(this.form, publisherId)
+      await api.publishJob(this.form)
       this.$message.success('发布成功')
       this.$router.push('/home/jobs')
     },

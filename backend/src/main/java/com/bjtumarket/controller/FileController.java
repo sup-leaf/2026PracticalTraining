@@ -15,7 +15,7 @@ import java.util.UUID;
 @CrossOrigin
 public class FileController {
 
-    @Value("${upload.path:D:/dasanxiaShixun/project/backend/uploads}")
+    @Value("${upload.path:./uploads}")
     private String uploadPath;
 
     @PostMapping("/upload")

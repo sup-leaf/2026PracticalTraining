@@ -48,15 +48,19 @@
         <el-form-item label="上传简历">
           <el-upload
             :action="uploadUrl"
+            :headers="uploadHeaders"
             :on-success="handleUploadSuccess"
+            :on-error="handleUploadError"
             :limit="1"
             accept=".pdf,.doc,.docx"
           >
-            <el-button type="primary">选择文件</el-button>
+            <el-button type="primary">选择并上传文件</el-button>
             <div class="el-upload__tip">支持 PDF、Word 格式，不超过 5MB</div>
           </el-upload>
-          <div v-if="form.fileUrl" style="margin-top: 10px;">
-            <el-link :href="form.fileUrl" target="_blank">查看已上传简历</el-link>
+          <div v-if="form.fileUrl" style="margin-top: 10px; padding: 8px; background: #f0f9eb; border-radius: 4px;">
+            <el-icon color="#67C23A"><CircleCheck /></el-icon>
+            <span style="color: #67C23A; margin-left: 4px;">简历文件已上传</span>
+            <el-link :href="form.fileUrl" target="_blank" style="margin-left: 12px;">点击查看</el-link>
           </div>
         </el-form-item>
         <el-form-item>
@@ -69,9 +73,11 @@
 
 <script>
 import api from '../api'
+import { CircleCheck } from '@element-plus/icons-vue'
 
 export default {
   name: 'Resume',
+  components: { CircleCheck },
   data() {
     return {
       form: {
@@ -91,16 +97,17 @@ export default {
         selfEvaluation: '',
         fileUrl: ''
       },
-      uploadUrl: '/api/file/upload'
+      uploadUrl: '/api/file/upload',
+      uploadHeaders: {}
     }
   },
   mounted() {
-    this.form.userId = parseInt(localStorage.getItem('userId'))
+    this.uploadHeaders = { Authorization: 'Bearer ' + localStorage.getItem('token') }
     this.loadResume()
   },
   methods: {
     async loadResume() {
-      const res = await api.getResume(this.form.userId)
+      const res = await api.getResume()
       if (res.data) {
         this.form = { ...this.form, ...res.data }
       }
@@ -112,6 +119,9 @@ export default {
       } else {
         this.$message.error(response.message || '上传失败')
       }
+    },
+    handleUploadError() {
+      this.$message.error('文件上传失败，请检查网络或文件格式')
     },
     async handleSave() {
       await api.saveResume(this.form)

@@ -7,6 +7,7 @@ import com.bjtumarket.vo.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -43,8 +44,11 @@ public class JobController {
     }
 
     @PostMapping("/publish")
-    public Result<String> publishJob(@RequestBody Job job, @RequestParam Long publisherId) {
+    public Result<String> publishJob(@RequestBody Job job, HttpServletRequest request) {
+        Long publisherId = (Long) request.getAttribute("userId");
+        Integer userType = (Integer) request.getAttribute("userType");
         job.setPublisherId(publisherId);
+        job.setPublisherType(userType == 2 ? 1 : 2);
         boolean success = jobService.publishJob(job);
         if (!success) {
             return Result.error("发布失败");
@@ -53,7 +57,12 @@ public class JobController {
     }
 
     @PutMapping("/update")
-    public Result<String> updateJob(@RequestBody Job job) {
+    public Result<String> updateJob(@RequestBody Job job, HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        Job existing = jobService.getById(job.getId());
+        if (existing == null || !existing.getPublisherId().equals(userId)) {
+            return Result.error("无权操作");
+        }
         boolean success = jobService.updateJob(job);
         if (!success) {
             return Result.error("更新失败");
@@ -62,8 +71,9 @@ public class JobController {
     }
 
     @DeleteMapping("/delete/{id}")
-    public Result<String> deleteJob(@PathVariable Long id, @RequestParam Long publisherId) {
-        boolean success = jobService.deleteJob(id, publisherId);
+    public Result<String> deleteJob(@PathVariable Long id, HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        boolean success = jobService.deleteJob(id, userId);
         if (!success) {
             return Result.error("删除失败");
         }
@@ -72,10 +82,11 @@ public class JobController {
 
     @GetMapping("/my")
     public Result<Map<String, Object>> myJobs(
-            @RequestParam Long publisherId,
+            HttpServletRequest request,
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size) {
-        Page<Job> pageResult = jobService.myJobs(publisherId, page, size);
+        Long userId = (Long) request.getAttribute("userId");
+        Page<Job> pageResult = jobService.myJobs(userId, page, size);
         Map<String, Object> result = new HashMap<>();
         result.put("records", pageResult.getRecords());
         result.put("total", pageResult.getTotal());

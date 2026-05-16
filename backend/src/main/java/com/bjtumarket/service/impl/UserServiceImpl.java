@@ -34,7 +34,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         String md5Password = DigestUtils.md5DigestAsHex(user.getPassword().getBytes(StandardCharsets.UTF_8));
         user.setPassword(md5Password);
-        user.setStatus(1);
+        user.setStatus(user.getUserType() != null && user.getUserType() == 2 ? 0 : 1);
         user.setCreateTime(LocalDateTime.now());
         user.setUpdateTime(LocalDateTime.now());
         return this.save(user);

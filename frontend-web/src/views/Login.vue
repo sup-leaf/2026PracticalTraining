@@ -51,9 +51,10 @@ export default {
         password: encryptedPassword,
         userType: this.form.userType
       })
-      localStorage.setItem('token', res.data.id)
-      localStorage.setItem('userType', this.form.userType)
-      localStorage.setItem('userId', res.data.id)
+      localStorage.setItem('token', res.data.token)
+      localStorage.setItem('userType', res.data.user.userType)
+      localStorage.setItem('userId', res.data.user.id)
+      localStorage.setItem('userName', res.data.user.username)
       this.$router.push('/home/jobs')
     }
   }
