@@ -56,5 +56,15 @@ export default {
   getStatsByMajor: () => api.get('/admin/stats/major'),
   getDeliveryTrend: () => api.get('/admin/stats/trend'),
   getTopEnterprises: () => api.get('/admin/stats/top-enterprises'),
-  getHotJobs: () => api.get('/admin/stats/hot-jobs')
+  getHotJobs: () => api.get('/admin/stats/hot-jobs'),
+
+  getResearchProjects: (params) => api.get('/research/project/list', { params }),
+  getResearchProject: (id) => api.get(`/research/project/${id}`),
+  publishResearchProject: (data) => api.post('/research/project/publish', data),
+  getMyResearchProjects: () => api.get('/research/my/projects'),
+  applyResearch: (projectId, note) => api.post(`/research/apply?projectId=${projectId}&note=${encodeURIComponent(note || '')}`),
+  getProjectApplications: (projectId) => api.get(`/research/project/${projectId}/applications`),
+  getMyResearchApplications: () => api.get('/research/my/applications'),
+  auditResearchApplication: (applicationId, status, note) =>
+    api.post(`/research/application/audit?applicationId=${applicationId}&status=${status}&note=${encodeURIComponent(note || '')}`)
 }

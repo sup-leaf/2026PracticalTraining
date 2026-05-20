@@ -104,6 +104,10 @@
             <el-icon><Document /></el-icon>
             <span>投递管理</span>
           </el-menu-item>
+          <el-menu-item index="/home/research">
+            <el-icon><Reading /></el-icon>
+            <span>科研竞赛</span>
+          </el-menu-item>
           <el-menu-item index="/home/resume">
             <el-icon><User /></el-icon>
             <span>我的简历</span>
