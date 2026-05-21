@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bjtumarket.entity.User;
 import com.bjtumarket.mapper.DeliveryMapper;
+import com.bjtumarket.mapper.InternshipMapper;
 import com.bjtumarket.mapper.JobMapper;
 import com.bjtumarket.mapper.ResumeMapper;
 import com.bjtumarket.mapper.UserMapper;
@@ -28,6 +29,9 @@ public class AdminServiceImpl implements AdminService {
 
     @Autowired
     private ResumeMapper resumeMapper;
+
+    @Autowired
+    private InternshipMapper internshipMapper;
 
     @Override
     public Page<User> listEnterprises(Integer page, Integer size, Integer status, String keyword) {
@@ -74,6 +78,8 @@ public class AdminServiceImpl implements AdminService {
         result.put("internshipRate", resumeTotal > 0
                 ? Math.round(acceptedTotal * 10000.0 / resumeTotal) / 100.0
                 : 0);
+        result.put("internshipTotal", internshipMapper.countAll());
+        result.put("internshipActive", internshipMapper.countActive());
         return result;
     }
 
@@ -120,6 +126,24 @@ public class AdminServiceImpl implements AdminService {
         }
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("jobs", list);
+        return result;
+    }
+
+    @Override
+    public Map<String, Object> internshipStats() {
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("totalInternships", internshipMapper.countAll());
+        result.put("activeInternships", internshipMapper.countActive());
+
+        List<Map<String, Object>> majorList = internshipMapper.countByMajor();
+        for (Map<String, Object> row : majorList) {
+            if (row.get("avgRating") != null) {
+                double avg = ((Number) row.get("avgRating")).doubleValue();
+                row.put("avgRating", Math.round(avg * 10.0) / 10.0);
+            }
+        }
+        result.put("majorDistribution", majorList);
+        result.put("topCompanies", internshipMapper.topCompanies());
         return result;
     }
 }

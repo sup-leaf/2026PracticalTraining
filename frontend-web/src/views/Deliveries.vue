@@ -3,7 +3,22 @@
     <el-card>
       <h3>投递管理</h3>
 
-      <el-table :data="deliveries" border style="margin-top: 20px" v-loading="loading">
+      <el-row v-if="userType !== 1" :gutter="10" class="filter-bar">
+        <el-col :span="6">
+          <el-input v-model="filterGpa" placeholder="GPA ≥" clearable @keyup.enter="loadDeliveries" />
+        </el-col>
+        <el-col :span="6">
+          <el-input v-model="filterMajor" placeholder="专业" clearable @keyup.enter="loadDeliveries" />
+        </el-col>
+        <el-col :span="6">
+          <el-input v-model="filterSkill" placeholder="技能标签" clearable @keyup.enter="loadDeliveries" />
+        </el-col>
+        <el-col :span="6">
+          <el-button type="primary" @click="loadDeliveries" style="width: 100%">筛选</el-button>
+        </el-col>
+      </el-row>
+
+      <el-table :data="deliveries" border style="margin-top: 10px" v-loading="loading">
         <el-table-column type="expand" v-if="userType !== 1">
           <template #default="{ row }">
             <div class="expand-info">
@@ -11,6 +26,7 @@
                 <el-descriptions-item label="姓名">{{ row.studentName }}</el-descriptions-item>
                 <el-descriptions-item label="专业">{{ row.studentMajor }}</el-descriptions-item>
                 <el-descriptions-item label="年级">{{ row.studentGrade }}</el-descriptions-item>
+                <el-descriptions-item label="GPA">{{ row.studentGpa }}</el-descriptions-item>
                 <el-descriptions-item label="手机">{{ row.studentPhone }}</el-descriptions-item>
                 <el-descriptions-item label="邮箱">{{ row.studentEmail }}</el-descriptions-item>
                 <el-descriptions-item label="技能">{{ row.studentSkills }}</el-descriptions-item>
@@ -41,11 +57,26 @@
             {{ formatTime(row.createTime) }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="200" fixed="right" v-if="userType !== 1">
+        <el-table-column label="操作" width="240" fixed="right" v-if="userType !== 1">
           <template #default="{ row }">
-            <el-button size="small" @click="updateStatus(row, 1)">已查看</el-button>
-            <el-button size="small" type="success" @click="showNoteDialog(row, 2)">面试中</el-button>
-            <el-button size="small" type="danger" @click="updateStatus(row, 4)">拒绝</el-button>
+            <template v-if="row.status === 0">
+              <el-button size="small" @click="updateStatus(row, 1)">已查看</el-button>
+            </template>
+            <template v-else-if="row.status === 1">
+              <el-button size="small" type="warning" @click="showNoteDialog(row, 2)">面试中</el-button>
+              <el-button size="small" type="danger" @click="updateStatus(row, 4)">拒绝</el-button>
+            </template>
+            <template v-else-if="row.status === 2">
+              <el-button size="small" type="success" @click="showNoteDialog(row, 3)">录用</el-button>
+              <el-button size="small" type="danger" @click="updateStatus(row, 4)">拒绝</el-button>
+            </template>
+            <template v-else-if="row.status === 3">
+              <el-button size="small" type="warning" @click="updateStatus(row, 2)">取消录用</el-button>
+              <el-button size="small" type="danger" @click="updateStatus(row, 4)">拒绝</el-button>
+            </template>
+            <template v-else-if="row.status === 4">
+              <el-button size="small" @click="updateStatus(row, 1)">重新打开</el-button>
+            </template>
           </template>
         </el-table-column>
       </el-table>
@@ -83,8 +114,11 @@ export default {
       deliveries: [],
       page: 1,
       total: 0,
+      filterGpa: '',
+      filterMajor: '',
+      filterSkill: '',
       statusText: ['待查看', '已查看', '面试中', '已录用', '已拒绝'],
-      statusTypes: ['info', '', 'success', '', 'danger'],
+      statusTypes: ['info', '', 'warning', 'success', 'danger'],
       noteVisible: false,
       note: '',
       pendingDelivery: null,
@@ -103,7 +137,12 @@ export default {
         if (this.userType === 1) {
           res = await api.getMyDeliveries()
         } else {
-          res = await api.getPublisherDeliveries()
+          const filters = {}
+          const gpa = parseFloat(this.filterGpa)
+          if (!isNaN(gpa)) filters.gpaMin = gpa
+          if (this.filterMajor) filters.major = this.filterMajor
+          if (this.filterSkill) filters.skillTag = this.filterSkill
+          res = await api.getPublisherDeliveries(filters)
         }
         this.deliveries = res.data.records || []
         this.total = res.data.total || 0
@@ -144,5 +183,8 @@ export default {
 }
 .expand-info {
   padding: 10px 20px;
+}
+.filter-bar {
+  margin-bottom: 0;
 }
 </style>

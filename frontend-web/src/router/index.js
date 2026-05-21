@@ -11,6 +11,7 @@ import JobList from '../views/JobList.vue'
 import JobPublish from '../views/JobPublish.vue'
 import Deliveries from '../views/Deliveries.vue'
 import Resume from '../views/Resume.vue'
+import Internship from '../views/Internship.vue'
 
 const routes = [
   { path: '/', redirect: '/login' },
@@ -29,6 +30,7 @@ const routes = [
       { path: 'job-manage', component: JobManage },
       { path: 'publish', component: JobPublish },
       { path: 'deliveries', component: Deliveries },
+      { path: 'internship', component: Internship },
       { path: 'resume', component: Resume }
     ]
   }

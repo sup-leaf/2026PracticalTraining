@@ -30,8 +30,11 @@ public class DeliveryController {
     public Result<Map<String, Object>> getJobDeliveries(
             @PathVariable Long jobId,
             @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "10") Integer size) {
-        return Result.success(deliveryService.getJobDeliveries(jobId, page, size));
+            @RequestParam(defaultValue = "10") Integer size,
+            @RequestParam(required = false) Double gpaMin,
+            @RequestParam(required = false) String major,
+            @RequestParam(required = false) String skillTag) {
+        return Result.success(deliveryService.getJobDeliveries(jobId, page, size, gpaMin, major, skillTag));
     }
 
     @GetMapping("/my")
@@ -47,9 +50,12 @@ public class DeliveryController {
     public Result<Map<String, Object>> getDeliveriesByPublisher(
             HttpServletRequest request,
             @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "10") Integer size) {
+            @RequestParam(defaultValue = "10") Integer size,
+            @RequestParam(required = false) Double gpaMin,
+            @RequestParam(required = false) String major,
+            @RequestParam(required = false) String skillTag) {
         Long userId = (Long) request.getAttribute("userId");
-        return Result.success(deliveryService.getDeliveriesByPublisher(userId, page, size));
+        return Result.success(deliveryService.getDeliveriesByPublisher(userId, page, size, gpaMin, major, skillTag));
     }
 
     @PutMapping("/status")

@@ -98,4 +98,12 @@ public class AdminController {
         }
         return Result.success(adminService.hotJobs());
     }
+
+    @GetMapping("/stats/internship")
+    public Result<Map<String, Object>> internshipStats(HttpServletRequest request) {
+        if (!isTeacher(request)) {
+            return Result.error(403, "无权限访问");
+        }
+        return Result.success(adminService.internshipStats());
+    }
 }

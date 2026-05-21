@@ -44,6 +44,33 @@
         </el-col>
       </el-row>
 
+      <el-row :gutter="20" class="main-stats">
+        <el-col :span="6">
+          <div class="stat-box" style="border: 1px solid rgba(103,194,58,0.3);">
+            <div class="stat-value" style="color: #67C23A;">{{ overview.internshipTotal || 0 }}</div>
+            <div class="stat-label">实习总人次</div>
+          </div>
+        </el-col>
+        <el-col :span="6">
+          <div class="stat-box" style="border: 1px solid rgba(64,158,255,0.3);">
+            <div class="stat-value" style="color: #409EFF;">{{ overview.internshipActive || 0 }}</div>
+            <div class="stat-label">实习进行中</div>
+          </div>
+        </el-col>
+        <el-col :span="6">
+          <div class="stat-box">
+            <div class="stat-value">{{ overview.studentCount || 0 }}</div>
+            <div class="stat-label">在校学生</div>
+          </div>
+        </el-col>
+        <el-col :span="6">
+          <div class="stat-box">
+            <div class="stat-value">{{ overview.pendingEnterpriseCount || 0 }}</div>
+            <div class="stat-label">待审核企业</div>
+          </div>
+        </el-col>
+      </el-row>
+
       <el-row :gutter="20" class="charts-row">
         <el-col :span="12">
           <el-card class="chart-card">

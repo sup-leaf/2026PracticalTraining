@@ -42,8 +42,16 @@ export default {
 
   applyJob: (jobId) => api.post(`/delivery/apply?jobId=${jobId}`),
   getMyDeliveries: () => api.get('/delivery/my'),
-  getJobDeliveries: (jobId) => api.get(`/delivery/job/${jobId}`),
-  getPublisherDeliveries: () => api.get('/delivery/publisher'),
+  getJobDeliveries: (jobId, filters) => {
+    const params = {}
+    if (filters) Object.assign(params, filters)
+    return api.get(`/delivery/job/${jobId}`, { params })
+  },
+  getPublisherDeliveries: (filters) => {
+    const params = {}
+    if (filters) Object.assign(params, filters)
+    return api.get('/delivery/publisher', { params })
+  },
   updateDeliveryStatus: (deliveryId, deliveryStatus, note) => {
     const params = { deliveryId, deliveryStatus }
     if (note) params.note = note
@@ -57,6 +65,7 @@ export default {
   getDeliveryTrend: () => api.get('/admin/stats/trend'),
   getTopEnterprises: () => api.get('/admin/stats/top-enterprises'),
   getHotJobs: () => api.get('/admin/stats/hot-jobs'),
+  getInternshipStats: () => api.get('/admin/stats/internship'),
 
   getResearchProjects: (params) => api.get('/research/project/list', { params }),
   getResearchProject: (id) => api.get(`/research/project/${id}`),
@@ -66,5 +75,19 @@ export default {
   getProjectApplications: (projectId) => api.get(`/research/project/${projectId}/applications`),
   getMyResearchApplications: () => api.get('/research/my/applications'),
   auditResearchApplication: (applicationId, status, note) =>
-    api.post(`/research/application/audit?applicationId=${applicationId}&status=${status}&note=${encodeURIComponent(note || '')}`)
+    api.post(`/research/application/audit?applicationId=${applicationId}&status=${status}&note=${encodeURIComponent(note || '')}`),
+
+  startInternship: (deliveryId) => api.post(`/internship/start?deliveryId=${deliveryId}`),
+  getMyInternship: () => api.get('/internship/my'),
+  submitInternshipLog: (internshipId, weekNum, content) =>
+    api.post(`/internship/log?internshipId=${internshipId}&weekNum=${weekNum}&content=${encodeURIComponent(content)}`),
+  getInternshipLogs: (internshipId) => api.get('/internship/logs', { params: { internshipId } }),
+  endInternship: (internshipId) => api.put(`/internship/end?internshipId=${internshipId}`),
+  rateInternship: (internshipId, rating, review) => {
+    const params = { internshipId, rating }
+    if (review) params.review = review
+    return api.put('/internship/rate', null, { params })
+  },
+  getCertificate: (id) => api.get(`/internship/certificate/${id}`),
+  getPublisherInternships: () => api.get('/internship/publisher')
 }

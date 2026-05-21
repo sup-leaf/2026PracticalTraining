@@ -68,19 +68,20 @@ src/main/java/com/bjtumarket/
 | 投递流程（5 状态 + 防重复） | ✅ |
 | 企业入驻审核 | ✅ |
 | 数据大屏（概览/专业率/趋势/Top5） | ✅ |
-| 科研项目选人 | ❌ |
+| 智能初筛（GPA/专业/技能筛选） | ✅ |
+| 企业入驻审核 | ✅ |
+| 实习全过程管理（入职→日志→评分→证明→统计） | ✅ |
+| 科研项目选人 | ✅ |
 | 竞赛组队 | ❌ |
-| 实习全过程管理 | ❌ |
 | 全局异常处理 / 短信 / 定时任务 / COS | ❌ |
 
 详见 `进度管理.md`（35 项任务逐项状态 + 待补充空行）。
 
 ### 下一步开发建议（按优先级）
 
-1. **科研项目选人模块**（Phase 4）—— 教师发招募 → 学生申请 → 教师审核
-2. **竞赛组队模块**（Phase 5）—— 队长发招募 → 标签匹配 → 入队审核
-3. **智能初筛**（Phase 3.9）—— 按 GPA / 专业 / 技能标签筛选投递
-4. **全局异常处理** —— `@ControllerAdvice` 统一拦截
+1. **竞赛组队模块**（Phase 5）—— 队长发招募 → 标签匹配 → 入队审核
+2. **全局异常处理**（Phase 1.5 ）—— `@ControllerAdvice` 统一拦截
+3. **COS 对接**（Phase 7.2 ）—— 文件上传迁移云存储
 
 ### 启动
 
@@ -186,12 +187,26 @@ GET   /api/admin/stats/major           → {majors: [{major, studentCount, accep
 GET   /api/admin/stats/trend           → {trend: [{date, count}]}  近7天
 GET   /api/admin/stats/top-enterprises → {enterprises: [{rank, name, jobCount, applicantCount}]}
 GET   /api/admin/stats/hot-jobs        → {jobs: [{rank, title, company, applicants}]}
+GET   /api/admin/stats/internship      → {totalInternships, activeInternships, majorDistribution, topCompanies}
 ```
 
 #### 文件 —— `/api/file`
 ```
 POST  /api/file/upload        multipart/form-data, file字段  → 文件URL（PDF/Word，≤5MB）
 ```
+
+#### 实习 —— `/api/internship`
+```
+POST /api/internship/start?deliveryId=          学生发起实习
+GET  /api/internship/my                         查看全部实习记录
+POST /api/internship/log?internshipId=&weekNum=&content=  提交周日志
+GET  /api/internship/logs?internshipId=         查看日志列表
+PUT  /api/internship/end?internshipId=          结束实习
+PUT  /api/internship/rate?internshipId=&rating=&review=  企业评分(1-5)
+GET  /api/internship/certificate/{id}           实习证明数据
+GET  /api/internship/publisher                  企业查看实习生
+```
+GET  /api/admin/stats/internship  → {totalInternships, activeInternships, majorDistribution, topCompanies}
 
 ### 状态码速查
 
@@ -201,6 +216,7 @@ POST  /api/file/upload        multipart/form-data, file字段  → 文件URL（P
 | jobType | 1 / 2 / 3 | 实习 / 全职 / 科研助理 |
 | deliveryStatus | 0→1→2→3/4 | 待查看→已查看→面试中→已录用/已拒绝 |
 | userStatus | 0 / 1 / 2 | 待审核 / 正常 / 已拒绝 |
+| internship status | 0 / 1 / 2 | 进行中 / 已完成 / 提前终止 |
 
 ---
 
@@ -212,6 +228,8 @@ POST  /api/file/upload        multipart/form-data, file字段  → 文件URL（P
 | `t_job` | 岗位 | title, job_type, publisher_id, status, view_count, delivery_count |
 | `t_resume` | 简历 | user_id(唯一), name, major, gpa, skills, file_url |
 | `t_delivery` | 投递 | job_id, resume_id, status(0-4), hr_note |
+| `t_internship` | 实习 | student_id, job_id, delivery_id, status(0-2), rating, review |
+| `t_internship_log` | 实习日志 | internship_id, week_num, content |
 
 建表脚本：`sql/init.sql`
 
@@ -219,10 +237,4 @@ POST  /api/file/upload        multipart/form-data, file字段  → 文件URL（P
 
 ## 成员
 
-| 角色 | 姓名 | 学号 |
-|------|------|------|
-| 组长 | 马勇 | 23301130 |
-| 组员 | 薛探昕 | 23301141 |
-| 组员 | 黄冠宇 | 23301124 |
-| 组员 | 徐健智 | 23301139 |
-| 组员 | 郭书豪 | 23301149 |
+hide

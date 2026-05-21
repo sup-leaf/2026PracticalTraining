@@ -88,6 +88,10 @@
               <el-icon><EditPen /></el-icon>
               <span>我的简历</span>
             </el-menu-item>
+            <el-menu-item index="/home/internship">
+              <el-icon><Collection /></el-icon>
+              <span>实习管理</span>
+            </el-menu-item>
           </el-sub-menu>
         </template>
 
@@ -111,6 +115,10 @@
           <el-menu-item index="/home/resume">
             <el-icon><User /></el-icon>
             <span>我的简历</span>
+          </el-menu-item>
+          <el-menu-item index="/home/internship">
+            <el-icon><Collection /></el-icon>
+            <span>实习管理</span>
           </el-menu-item>
         </template>
       </el-menu>
@@ -136,7 +144,7 @@
 import {
   OfficeBuilding, Reading, DocumentChecked, PieChart,
   List, Plus, Document, User, TrendCharts, Briefcase,
-  Message, Checked, TrophyBase, EditPen
+  Message, Checked, TrophyBase, EditPen, Collection
 } from '@element-plus/icons-vue'
 
 export default {
@@ -144,7 +152,7 @@ export default {
   components: {
     OfficeBuilding, Reading, DocumentChecked, PieChart,
     List, Plus, Document, User, TrendCharts, Briefcase,
-    Message, Checked, TrophyBase, EditPen
+  Message, Checked, TrophyBase, EditPen, Collection
   },
   data() {
     return {
@@ -170,6 +178,7 @@ export default {
         '/home/job-manage': '岗位管理',
         '/home/publish': '发布岗位',
         '/home/deliveries': '投递管理',
+        '/home/internship': '实习管理',
         '/home/resume': '我的简历'
       }
       return titles[path] || '首页'

@@ -58,13 +58,14 @@ public class DeliveryServiceImpl extends ServiceImpl<DeliveryMapper, Delivery> i
     }
 
     @Override
-    public Map<String, Object> getJobDeliveries(Long jobId, Integer page, Integer size) {
+    public Map<String, Object> getJobDeliveries(Long jobId, Integer page, Integer size,
+                                                  Double gpaMin, String major, String skillTag) {
         Page<Delivery> pageParam = new Page<>(page, size);
         LambdaQueryWrapper<Delivery> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Delivery::getJobId, jobId)
                 .orderByDesc(Delivery::getCreateTime);
         Page<Delivery> pageResult = this.page(pageParam, wrapper);
-        return buildResult(pageResult);
+        return buildResult(pageResult, gpaMin, major, skillTag);
     }
 
     @Override
@@ -81,17 +82,18 @@ public class DeliveryServiceImpl extends ServiceImpl<DeliveryMapper, Delivery> i
         wrapper.eq(Delivery::getResumeId, resume.getId())
                 .orderByDesc(Delivery::getCreateTime);
         Page<Delivery> pageResult = this.page(pageParam, wrapper);
-        return buildResult(pageResult);
+        return buildResult(pageResult, null, null, null);
     }
 
     @Override
-    public Map<String, Object> getDeliveriesByPublisher(Long publisherId, Integer page, Integer size) {
+    public Map<String, Object> getDeliveriesByPublisher(Long publisherId, Integer page, Integer size,
+                                                         Double gpaMin, String major, String skillTag) {
         Page<Delivery> pageParam = new Page<>(page, size);
         LambdaQueryWrapper<Delivery> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Delivery::getJobPublisherId, publisherId)
                 .orderByDesc(Delivery::getCreateTime);
         Page<Delivery> pageResult = this.page(pageParam, wrapper);
-        return buildResult(pageResult);
+        return buildResult(pageResult, gpaMin, major, skillTag);
     }
 
     @Override
@@ -111,7 +113,8 @@ public class DeliveryServiceImpl extends ServiceImpl<DeliveryMapper, Delivery> i
         return this.updateById(delivery);
     }
 
-    private Map<String, Object> buildResult(Page<Delivery> pageResult) {
+    private Map<String, Object> buildResult(Page<Delivery> pageResult,
+                                             Double gpaMin, String major, String skillTag) {
         List<Map<String, Object>> records = new ArrayList<>();
         Map<Long, String> jobTitleCache = new HashMap<>();
         Map<Long, Map<String, Object>> resumeCache = new HashMap<>();
@@ -144,17 +147,39 @@ public class DeliveryServiceImpl extends ServiceImpl<DeliveryMapper, Delivery> i
                 m.put("studentSkills", r.getSkills());
                 m.put("studentAwards", r.getAwards());
                 m.put("studentGrade", r.getGrade());
+                m.put("studentGpa", r.getGpa());
                 m.put("studentFileUrl", r.getFileUrl());
                 return m;
             });
             vo.putAll(resumeInfo);
 
+            if (!matchFilter(vo, gpaMin, major, skillTag)) {
+                continue;
+            }
             records.add(vo);
         }
 
         Map<String, Object> result = new HashMap<>();
         result.put("records", records);
-        result.put("total", pageResult.getTotal());
+        result.put("total", (long) records.size());
         return result;
+    }
+
+    private boolean matchFilter(Map<String, Object> vo, Double gpaMin, String major, String skillTag) {
+        if (gpaMin != null) {
+            Object gpaObj = vo.get("studentGpa");
+            if (gpaObj == null) return false;
+            double gpa = gpaObj instanceof Double ? (Double) gpaObj : 0;
+            if (gpa < gpaMin) return false;
+        }
+        if (StringUtils.hasText(major)) {
+            Object majorObj = vo.get("studentMajor");
+            if (majorObj == null || !majorObj.toString().contains(major)) return false;
+        }
+        if (StringUtils.hasText(skillTag)) {
+            Object skillsObj = vo.get("studentSkills");
+            if (skillsObj == null || !skillsObj.toString().contains(skillTag)) return false;
+        }
+        return true;
     }
 }
