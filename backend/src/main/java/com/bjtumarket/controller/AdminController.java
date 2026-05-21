@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bjtumarket.entity.User;
 import com.bjtumarket.service.AdminService;
 import com.bjtumarket.vo.Result;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,6 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Api(tags = "管理员模块")
 @RestController
 @RequestMapping("/api/admin")
 @CrossOrigin
@@ -25,6 +28,7 @@ public class AdminController {
         return userType != null && userType == 3;
     }
 
+    @ApiOperation("企业入驻列表（分页/状态筛选/搜索）")
     @GetMapping("/enterprise/list")
     public Result<Map<String, Object>> listEnterprises(
             HttpServletRequest request,
@@ -44,6 +48,7 @@ public class AdminController {
         return Result.success(result);
     }
 
+    @ApiOperation("审核企业（1通过/2拒绝）")
     @PutMapping("/enterprise/audit/{id}")
     public Result<String> auditEnterprise(
             HttpServletRequest request,
@@ -59,6 +64,7 @@ public class AdminController {
         return Result.success("审核成功");
     }
 
+    @ApiOperation("数据概览（学生/企业/岗位/投递/实习率）")
     @GetMapping("/stats/overview")
     public Result<Map<String, Object>> statsOverview(HttpServletRequest request) {
         if (!isTeacher(request)) {
@@ -67,6 +73,7 @@ public class AdminController {
         return Result.success(adminService.statsOverview());
     }
 
+    @ApiOperation("各专业实习达成率")
     @GetMapping("/stats/major")
     public Result<Map<String, Object>> statsByMajor(HttpServletRequest request) {
         if (!isTeacher(request)) {
@@ -75,6 +82,7 @@ public class AdminController {
         return Result.success(adminService.statsByMajor());
     }
 
+    @ApiOperation("近7天投递趋势")
     @GetMapping("/stats/trend")
     public Result<Map<String, Object>> deliveryTrend(HttpServletRequest request) {
         if (!isTeacher(request)) {
@@ -83,6 +91,7 @@ public class AdminController {
         return Result.success(adminService.deliveryTrend());
     }
 
+    @ApiOperation("Top 5 合作企业")
     @GetMapping("/stats/top-enterprises")
     public Result<Map<String, Object>> topEnterprises(HttpServletRequest request) {
         if (!isTeacher(request)) {
@@ -91,6 +100,7 @@ public class AdminController {
         return Result.success(adminService.topEnterprises());
     }
 
+    @ApiOperation("Top 5 热门岗位")
     @GetMapping("/stats/hot-jobs")
     public Result<Map<String, Object>> hotJobs(HttpServletRequest request) {
         if (!isTeacher(request)) {
@@ -99,6 +109,7 @@ public class AdminController {
         return Result.success(adminService.hotJobs());
     }
 
+    @ApiOperation("实习统计（总人次/进行中/专业分布/Top企业）")
     @GetMapping("/stats/internship")
     public Result<Map<String, Object>> internshipStats(HttpServletRequest request) {
         if (!isTeacher(request)) {

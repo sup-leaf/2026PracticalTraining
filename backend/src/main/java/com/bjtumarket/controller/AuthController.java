@@ -7,10 +7,13 @@ import com.bjtumarket.vo.LoginRequest;
 import com.bjtumarket.vo.LoginUser;
 import com.bjtumarket.vo.RegisterRequest;
 import com.bjtumarket.vo.Result;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+@Api(tags = "认证模块")
 @RestController
 @RequestMapping("/api/auth")
 @CrossOrigin
@@ -22,6 +25,7 @@ public class AuthController {
     @Autowired
     private JwtUtil jwtUtil;
 
+    @ApiOperation("用户登录，返回JWT令牌")
     @PostMapping("/login")
     public Result<LoginUser> login(@RequestBody LoginRequest request) {
         User user = userService.login(request.getUsername(), request.getPassword(), request.getUserType());
@@ -36,6 +40,7 @@ public class AuthController {
         return Result.success(loginUser);
     }
 
+    @ApiOperation("用户注册（学生/企业/教师，企业注册后待审核）")
     @PostMapping("/register")
     public Result<String> register(@RequestBody RegisterRequest request) {
         if (request.getUsername() == null || request.getPassword() == null || request.getUserType() == null) {

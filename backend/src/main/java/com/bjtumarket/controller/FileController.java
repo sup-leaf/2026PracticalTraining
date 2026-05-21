@@ -1,6 +1,8 @@
 package com.bjtumarket.controller;
 
 import com.bjtumarket.vo.Result;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -10,6 +12,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.util.UUID;
 
+@Api(tags = "文件模块")
 @RestController
 @RequestMapping("/api/file")
 @CrossOrigin
@@ -18,6 +21,7 @@ public class FileController {
     @Value("${upload.path:./uploads}")
     private String uploadPath;
 
+    @ApiOperation("上传简历文件（PDF/Word，≤5MB）")
     @PostMapping("/upload")
     public Result<String> uploadFile(@RequestParam("file") MultipartFile file) {
         if (file.isEmpty()) {

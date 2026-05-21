@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bjtumarket.entity.Job;
 import com.bjtumarket.service.JobService;
 import com.bjtumarket.vo.Result;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,6 +13,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
 
+@Api(tags = "岗位模块")
 @RestController
 @RequestMapping("/api/job")
 @CrossOrigin
@@ -19,6 +22,7 @@ public class JobController {
     @Autowired
     private JobService jobService;
 
+    @ApiOperation("岗位列表（分页/类型/关键词筛选）")
     @GetMapping("/list")
     public Result<Map<String, Object>> listJobs(
             @RequestParam(defaultValue = "1") Integer page,
@@ -34,6 +38,7 @@ public class JobController {
         return Result.success(result);
     }
 
+    @ApiOperation("岗位详情")
     @GetMapping("/detail/{id}")
     public Result<Job> getJobDetail(@PathVariable Long id) {
         Job job = jobService.getJobDetail(id);
@@ -43,6 +48,7 @@ public class JobController {
         return Result.success(job);
     }
 
+    @ApiOperation("发布岗位")
     @PostMapping("/publish")
     public Result<String> publishJob(@RequestBody Job job, HttpServletRequest request) {
         Long publisherId = (Long) request.getAttribute("userId");
@@ -56,6 +62,7 @@ public class JobController {
         return Result.success("发布成功");
     }
 
+    @ApiOperation("编辑岗位")
     @PutMapping("/update")
     public Result<String> updateJob(@RequestBody Job job, HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
@@ -70,6 +77,7 @@ public class JobController {
         return Result.success("更新成功");
     }
 
+    @ApiOperation("删除岗位")
     @DeleteMapping("/delete/{id}")
     public Result<String> deleteJob(@PathVariable Long id, HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
@@ -80,6 +88,7 @@ public class JobController {
         return Result.success("删除成功");
     }
 
+    @ApiOperation("我发布的岗位")
     @GetMapping("/my")
     public Result<Map<String, Object>> myJobs(
             HttpServletRequest request,
