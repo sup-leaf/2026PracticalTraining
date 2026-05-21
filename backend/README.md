@@ -27,30 +27,34 @@ src/main/java/com/bjtumarket/
 ├── config/
 │   ├── CorsConfig.java                # 跨域
 │   ├── WebConfig.java                 # uploads 静态资源映射
+│   ├── Knife4jConfig.java             # Swagger API 文档
 │   ├── LoginInterceptor.java          # JWT 拦截器
 │   └── InterceptorConfig.java         # 拦截注册（排除 /api/auth/**）
 ├── util/
 │   └── JwtUtil.java                   # JWT 签发/校验
 ├── entity/
 │   ├── User.java / Job.java / Resume.java / Delivery.java
+│   ├── ResearchProject.java / ResearchApplication.java
+│   └── Internship.java / InternshipLog.java
 ├── mapper/
-│   ├── UserMapper.java                # + countStudents 等统计 @Select
-│   ├── JobMapper.java                 # + topEnterprises / hotJobs
-│   ├── ResumeMapper.java              # + countByMajor
-│   └── DeliveryMapper.java            # + deliveryTrend
+│   ├── UserMapper.java / JobMapper.java / ResumeMapper.java / DeliveryMapper.java
+│   ├── ResearchProjectMapper.java / ResearchApplicationMapper.java
+│   └── InternshipMapper.java / InternshipLogMapper.java
 ├── service/
-│   ├── UserService.java       / impl
-│   ├── JobService.java        / impl
-│   ├── ResumeService.java     / impl
-│   ├── DeliveryService.java   / impl   # buildResult() 附带简历+岗位信息
-│   └── AdminService.java      / impl   # 企业审核 + 数据统计
+│   ├── UserService.java / JobService.java / ResumeService.java
+│   ├── DeliveryService.java   # buildResult() 附带简历+岗位信息
+│   ├── AdminService.java      # 企业审核 + 数据统计
+│   ├── ResearchService.java   # 科研项目选人
+│   └── InternshipService.java # 实习全过程管理
 ├── controller/
 │   ├── AuthController.java            # POST login(返回JWT) / register
 │   ├── JobController.java             # CRUD + 分页列表
 │   ├── ResumeController.java          # GET detail / POST save
-│   ├── DeliveryController.java        # apply / my / publisher / status
-│   ├── AdminController.java           # 企业审核 / 5个stats接口
-│   └── FileController.java            # PDF/Word 上传
+│   ├── DeliveryController.java        # apply / my / publisher / status (支持筛选)
+│   ├── AdminController.java           # 企业审核 / 6个stats接口
+│   ├── FileController.java            # PDF/Word 上传
+│   ├── ResearchProjectController.java # 科研项目CRUD + 申请审核
+│   └── InternshipController.java      # 实习入职/日志/评分/证明
 └── vo/
     ├── Result.java                    # {code, message, data}
     ├── LoginRequest.java / RegisterRequest.java
@@ -69,13 +73,12 @@ src/main/java/com/bjtumarket/
 | 企业入驻审核 | ✅ |
 | 数据大屏（概览/专业率/趋势/Top5） | ✅ |
 | 智能初筛（GPA/专业/技能筛选） | ✅ |
-| 企业入驻审核 | ✅ |
 | 实习全过程管理（入职→日志→评分→证明→统计） | ✅ |
 | 科研项目选人 | ✅ |
 | 竞赛组队 | ❌ |
 | 全局异常处理 / 短信 / 定时任务 / COS | ❌ |
 
-详见 `进度管理.md`（35 项任务逐项状态 + 待补充空行）。
+ 详见 `进度管理.md`（47 项任务逐项状态 + 待补充空行）。
 
 ### 下一步开发建议（按优先级）
 
@@ -87,8 +90,7 @@ src/main/java/com/bjtumarket/
 
 ```bash
 cd backend
-mysql -u root -p < sql/init.sql
-mysql -u root -p -e "USE campus_market; INSERT INTO t_user (username,password,user_type,teacher_no,status) VALUES ('admin',MD5(MD5('123456')),3,'T001',1);"
+mysql -u root -p -e "source sql/init.sql; source sql/research.sql; source sql/internship.sql; USE campus_market; INSERT INTO t_user (username,password,user_type,teacher_no,status) VALUES ('admin',MD5(MD5('123456')),3,'T001',1);"
 # 修改 application.yml 中你的 MySQL 密码
 mvn spring-boot:run
 ```
@@ -131,7 +133,7 @@ mvn spring-boot:run
 { "code": 401, "message": "用户名或密码错误" }
 ```
 
-### 全部接口速查（23 个）
+### 全部接口速查（40 个）
 
 #### 认证 —— `/api/auth`
 ```
@@ -159,30 +161,42 @@ POST   /api/resume/save       { name, major, skills, fileUrl, ... }  →  保存
 ```
 POST   /api/delivery/apply?jobId={id}                          →  投递（防重复，需先有简历）
 GET    /api/delivery/my?page=1&size=10                          →  我的投递 [{id, jobTitle, status, hrNote, createTime}]
-GET    /api/delivery/publisher?page=1&size=10                   →  我收到的投递 [{id, jobTitle, studentName, studentMajor, studentPhone, ...}]
-GET    /api/delivery/job/{jobId}?page=1&size=10                 →  某岗位的投递（含申请人信息）
+GET    /api/delivery/publisher?page=1&size=10&gpaMin=&major=&skillTag=  →  我收到的投递（支持筛选）
+GET    /api/delivery/job/{jobId}?page=1&size=10&gpaMin=&major=&skillTag=  →  某岗位投递（支持筛选）
 PUT    /api/delivery/status?deliveryId={id}&deliveryStatus={0-4}&note={备注}  →  更新状态
 ```
 
-`deliveryStatus` 状态流转：`0待查看 → 1已查看 → 2面试中 → 3已录用 / 4已拒绝`
+`deliveryStatus` 状态流转：`0待查看 → 1已查看 → 2面试中 → 3已录用↔可撤回 / 4已拒绝↔可重开`
 
-`/publisher` 和 `/job/{jobId}` 接口返回的每条投递都携带申请人信息：
-```json
-{
-  "id": 3, "jobId": 1, "resumeId": 2, "status": 1,
-  "jobTitle": "Java开发实习",
-  "studentName": "张三", "studentMajor": "计算机科学",
-  "studentPhone": "138xxxx", "studentEmail": "zhang@bjtu.edu.cn",
-  "studentSkills": "Java,Spring", "studentAwards": "国赛二等奖",
-  "studentGrade": "大三", "studentFileUrl": "/uploads/2026/05/16/xxx.pdf"
-}
+#### 科研 —— `/api/research`
+```
+POST   /api/research/project/publish       教师发布科研项目
+GET    /api/research/project/list?page=&size=&keyword=  项目广场
+GET    /api/research/project/{id}          项目详情
+POST   /api/research/apply?projectId=&note=  学生申请加入
+POST   /api/research/application/audit?applicationId=&status=  教师审核(1通过/2驳回)
+GET    /api/research/project/{id}/applications  某项目申请列表
+GET    /api/research/my/applications       我的申请
+GET    /api/research/my/projects           我发布的项目
+```
+
+#### 实习 —— `/api/internship`
+```
+POST   /api/internship/start?deliveryId=          学生发起实习（仅已录用投递）
+GET    /api/internship/my                         查看全部实习记录
+POST   /api/internship/log?internshipId=&weekNum=&content=  提交周日志
+GET    /api/internship/logs?internshipId=         查看日志列表
+PUT    /api/internship/end?internshipId=          结束实习
+PUT    /api/internship/rate?internshipId=&rating=&review=  企业评分(1-5)
+GET    /api/internship/certificate/{id}           实习证明数据
+GET    /api/internship/publisher                  企业查看实习生
 ```
 
 #### 管理员 —— `/api/admin`（仅教师 userType=3）
 ```
-GET   /api/admin/enterprise/list?page=1&size=10&status=0&keyword=华为  → 企业列表
-PUT   /api/admin/enterprise/audit/{id}?status=1                         → 审核（1通过/2拒绝）
-GET   /api/admin/stats/overview        → {studentCount, enterpriseCount, jobCount, deliveryCountThisMonth, internshipRate}
+GET   /api/admin/enterprise/list?page=&size=&status=&keyword=  企业列表
+PUT   /api/admin/enterprise/audit/{id}?status=1                审核（1通过/2拒绝）
+GET   /api/admin/stats/overview        → {studentCount, enterpriseCount, jobCount, deliveryCountThisMonth, internshipRate, internshipTotal, internshipActive}
 GET   /api/admin/stats/major           → {majors: [{major, studentCount, acceptedCount, rate}]}
 GET   /api/admin/stats/trend           → {trend: [{date, count}]}  近7天
 GET   /api/admin/stats/top-enterprises → {enterprises: [{rank, name, jobCount, applicantCount}]}
@@ -195,26 +209,13 @@ GET   /api/admin/stats/internship      → {totalInternships, activeInternships,
 POST  /api/file/upload        multipart/form-data, file字段  → 文件URL（PDF/Word，≤5MB）
 ```
 
-#### 实习 —— `/api/internship`
-```
-POST /api/internship/start?deliveryId=          学生发起实习
-GET  /api/internship/my                         查看全部实习记录
-POST /api/internship/log?internshipId=&weekNum=&content=  提交周日志
-GET  /api/internship/logs?internshipId=         查看日志列表
-PUT  /api/internship/end?internshipId=          结束实习
-PUT  /api/internship/rate?internshipId=&rating=&review=  企业评分(1-5)
-GET  /api/internship/certificate/{id}           实习证明数据
-GET  /api/internship/publisher                  企业查看实习生
-```
-GET  /api/admin/stats/internship  → {totalInternships, activeInternships, majorDistribution, topCompanies}
-
 ### 状态码速查
 
 | 字段 | 值 | 含义 |
 |------|----|------|
 | userType | 1 / 2 / 3 | 学生 / 企业 / 教师 |
 | jobType | 1 / 2 / 3 | 实习 / 全职 / 科研助理 |
-| deliveryStatus | 0→1→2→3/4 | 待查看→已查看→面试中→已录用/已拒绝 |
+| deliveryStatus | 0→1→2→3↔4 | 待查看→已查看→面试中→已录用(可撤回)/已拒绝(可重开) |
 | userStatus | 0 / 1 / 2 | 待审核 / 正常 / 已拒绝 |
 | internship status | 0 / 1 / 2 | 进行中 / 已完成 / 提前终止 |
 
@@ -228,10 +229,12 @@ GET  /api/admin/stats/internship  → {totalInternships, activeInternships, majo
 | `t_job` | 岗位 | title, job_type, publisher_id, status, view_count, delivery_count |
 | `t_resume` | 简历 | user_id(唯一), name, major, gpa, skills, file_url |
 | `t_delivery` | 投递 | job_id, resume_id, status(0-4), hr_note |
+| `t_research_project` | 科研项目 | title, description, requirement, publisher_id, status |
+| `t_research_application` | 科研申请 | project_id, student_id, status(0-2), note |
 | `t_internship` | 实习 | student_id, job_id, delivery_id, status(0-2), rating, review |
 | `t_internship_log` | 实习日志 | internship_id, week_num, content |
 
-建表脚本：`sql/init.sql`
+建表脚本：`sql/init.sql`（基础表）/ `sql/research.sql`（科研表）/ `sql/internship.sql`（实习表）
 
 ---
 

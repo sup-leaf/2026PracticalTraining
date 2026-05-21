@@ -15,7 +15,7 @@ import java.util.*;
 
 /**
  * 实习全过程管理服务实现
- * 对应进度管理 6.1~6.5：入职报备、日志提交、企业评分、电子证明、统计
+ * 入职报备、日志提交、企业评分、电子证明、统计
  */
 @Service
 public class InternshipServiceImpl extends ServiceImpl<InternshipMapper, Internship> implements InternshipService {
@@ -33,7 +33,7 @@ public class InternshipServiceImpl extends ServiceImpl<InternshipMapper, Interns
     private ResumeService resumeService;
 
     /**
-     * 6.1 学生发起实习
+     * 学生发起实习
      * 条件：投递已被录用(status=3)、简历归属当前用户、当前无进行中的实习
      */
     @Override
@@ -85,7 +85,7 @@ public class InternshipServiceImpl extends ServiceImpl<InternshipMapper, Interns
     }
 
     /**
-     * 6.2 学生提交实习周日志
+     * 学生提交实习周日志
      * 限制：只能提交自己实习的日志，且实习必须进行中
      */
     @Override
@@ -134,7 +134,7 @@ public class InternshipServiceImpl extends ServiceImpl<InternshipMapper, Interns
     }
 
     /**
-     * 6.3 企业对实习评分
+     * 企业对实习评分
      * 权限：企业(userType=2)或教师(userType=3)均可评分
      */
     @Override
@@ -154,7 +154,7 @@ public class InternshipServiceImpl extends ServiceImpl<InternshipMapper, Interns
     }
 
     /**
-     * 6.4 生成实习证明数据
+     * 生成实习证明数据
      * 综合实习记录、简历、岗位信息返回结构化 JSON
      */
     @Override
