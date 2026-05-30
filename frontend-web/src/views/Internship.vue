@@ -37,6 +37,7 @@
             <el-descriptions-item label="评语">{{ i.review || '暂无' }}</el-descriptions-item>
           </el-descriptions>
           <el-button v-if="i.status === 0" type="danger" size="small" style="margin-top: 10px;" @click="handleEnd(i)">结束实习</el-button>
+          <el-button v-if="i.status === 1 && !i.selfReviewed" type="warning" size="small" style="margin-top: 10px;" @click="showSelfReviewDialog(i)">评价企业</el-button>
         </el-card>
         <div v-if="internships.every(i => i.status !== 0)" style="margin-top: 15px;">
           <h4 style="margin-bottom: 10px;">可发起的新实习（已录用投递）</h4>
@@ -161,21 +162,30 @@
     </el-card>
 
     <!-- ===== 评分对话框 ===== -->
-    <el-dialog v-model="rateVisible" title="评价实习生" width="400px">
-      <p style="margin-bottom: 10px;">实习生：<strong>{{ rateTarget?.studentName }}</strong></p>
-      <el-form label-width="60px">
-        <el-form-item label="评分">
-          <el-rate v-model="rateScore" :max="5" show-score />
-        </el-form-item>
-        <el-form-item label="评语">
-          <el-input v-model="rateReview" type="textarea" :rows="3" placeholder="对该生实习表现的评价..." />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="rateVisible = false">取消</el-button>
-        <el-button type="primary" @click="confirmRate">提交评价</el-button>
-      </template>
-    </el-dialog>
+        <el-dialog v-model="rateVisible" title="评价实习生" width="400px">
+          <p style="margin-bottom: 10px;">实习生：<strong>{{ rateTarget?.studentName }}</strong></p>
+          <el-form label-width="60px">
+            <el-form-item label="评分"><el-rate v-model="rateScore" :max="5" show-score /></el-form-item>
+            <el-form-item label="评语"><el-input v-model="rateReview" type="textarea" :rows="3" placeholder="对该生实习表现的评价..." /></el-form-item>
+          </el-form>
+          <template #footer>
+            <el-button @click="rateVisible = false">取消</el-button>
+            <el-button type="primary" @click="confirmRate">提交评价</el-button>
+          </template>
+        </el-dialog>
+
+        <!-- 学生评价企业对话框 -->
+        <el-dialog v-model="selfReviewVisible" title="评价实习企业" width="400px">
+          <p style="margin-bottom: 10px;">为你在 {{ selfReviewTarget?.companyName }} 的实习经历打分</p>
+          <el-form label-width="60px">
+            <el-form-item label="评分"><el-rate v-model="selfRateScore" :max="5" show-score /></el-form-item>
+            <el-form-item label="评价"><el-input v-model="selfRateReview" type="textarea" :rows="3" placeholder="评价企业、导师、工作环境等..." /></el-form-item>
+          </el-form>
+          <template #footer>
+            <el-button @click="selfReviewVisible = false">取消</el-button>
+            <el-button type="primary" @click="confirmSelfReview">提交评价</el-button>
+          </template>
+        </el-dialog>
   </div>
 </template>
 
@@ -201,7 +211,11 @@ export default {
       rateVisible: false,
       rateTarget: null,
       rateScore: 3,
-      rateReview: ''
+      rateReview: '',
+      selfReviewVisible: false,
+      selfReviewTarget: null,
+      selfRateScore: 3,
+      selfRateReview: ''
     }
   },
   mounted() {
@@ -310,10 +324,25 @@ export default {
           this.$message.success('评价已提交')
           this.rateVisible = false
           this.loadData()
-        } else {
-          this.$message.error(res.message || '评价失败')
-        }
-      } catch (e) { this.$message.error('评价失败，请确认你有权限评价该实习') }
+        } else { this.$message.error(res.message || '评价失败') }
+      } catch (e) { this.$message.error('评价失败') }
+    },
+    showSelfReviewDialog(row) {
+      this.selfReviewTarget = row
+      this.selfRateScore = 3
+      this.selfRateReview = ''
+      this.selfReviewVisible = true
+    },
+    async confirmSelfReview() {
+      if (!this.selfRateScore) { this.$message.error('请选择评分'); return }
+      try {
+        const res = await api.studentReview(this.selfReviewTarget.id, this.selfRateScore, this.selfRateReview)
+        if (res.code === 200) {
+          this.$message.success('评价已提交')
+          this.selfReviewVisible = false
+          this.loadData()
+        } else { this.$message.error(res.message || '评价失败') }
+      } catch (e) { this.$message.error('评价失败') }
     }
   }
 }

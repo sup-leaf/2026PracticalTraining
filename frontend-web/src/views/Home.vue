@@ -137,7 +137,13 @@
           <span class="page-title">{{ pageTitle }}</span>
         </div>
         <div class="header-right">
-          <span class="username">当前用户: {{ userName || userId }}</span>
+          <span class="username">
+            {{ userTypeText }}：{{ userName || userId }}
+            <el-tag v-if="memberLevel === 1" type="warning" size="small" style="margin-left: 6px;">VIP</el-tag>
+          </span>
+          <el-button v-if="userType === 1" size="small" @click="handleToggleVip" :type="memberLevel === 1 ? 'info' : 'warning'" style="margin-right: 8px;">
+            {{ memberLevel === 1 ? '取消VIP' : '升级VIP' }}
+          </el-button>
           <el-button type="danger" size="small" @click="logout">退出登录</el-button>
         </div>
       </el-header>
@@ -154,6 +160,7 @@ import {
   List, Plus, Document, User, TrendCharts, Briefcase,
   Message, Checked, TrophyBase, EditPen, Collection, Flag
 } from '@element-plus/icons-vue'
+import api from '../api'
 
 export default {
   name: 'Home',
@@ -167,7 +174,8 @@ export default {
       activeMenu: '/home/jobs',
       userType: null,
       userId: null,
-      userName: ''
+      userName: '',
+      memberLevel: 0
     }
   },
   computed: {
@@ -198,6 +206,7 @@ export default {
     this.userId = localStorage.getItem('userId')
     this.userName = localStorage.getItem('userName') || ''
     this.activeMenu = this.$route.path
+    if (this.userType === 1) this.loadMemberLevel()
   },
   watch: {
     '$route.path'(path) {
@@ -208,6 +217,19 @@ export default {
     logout() {
       localStorage.clear()
       this.$router.push('/login')
+    },
+    async loadMemberLevel() {
+      try {
+        const res = await api.getMemberLevel()
+        this.memberLevel = res.data?.memberLevel || 0
+      } catch (e) { /* ignore */ }
+    },
+    async handleToggleVip() {
+      try {
+        const res = await api.toggleVip()
+        this.memberLevel = res.data?.memberLevel || 0
+        this.$message.success(res.data?.message || '操作成功')
+      } catch (e) { this.$message.error('操作失败') }
     }
   }
 }

@@ -2,7 +2,9 @@ package com.bjtumarket.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bjtumarket.entity.Job;
+import com.bjtumarket.entity.User;
 import com.bjtumarket.service.JobService;
+import com.bjtumarket.service.UserService;
 import com.bjtumarket.vo.Result;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -10,7 +12,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Api(tags = "岗位模块")
@@ -21,6 +25,9 @@ public class JobController {
 
     @Autowired
     private JobService jobService;
+
+    @Autowired
+    private UserService userService;
 
     @ApiOperation("岗位列表（分页/类型/关键词筛选）")
     @GetMapping("/list")
@@ -53,13 +60,22 @@ public class JobController {
     public Result<String> publishJob(@RequestBody Job job, HttpServletRequest request) {
         Long publisherId = (Long) request.getAttribute("userId");
         Integer userType = (Integer) request.getAttribute("userType");
+        // S3: 校外企业检查发布数量限制（当月最多5条）
+        if (userType == 2) {
+            User publisher = userService.getById(publisherId);
+            if (publisher != null && (publisher.getCooperationType() == null || publisher.getCooperationType() == 2)) {
+                List<Job> existing = jobService.lambdaQuery()
+                        .eq(Job::getPublisherId, publisherId)
+                        .eq(Job::getStatus, 1)
+                        .ge(Job::getCreateTime, LocalDateTime.now().withDayOfMonth(1).withHour(0).withMinute(0))
+                        .list();
+                if (existing.size() >= 5) return Result.error("校外企业当月发布已达上限（5条）");
+            }
+        }
         job.setPublisherId(publisherId);
         job.setPublisherType(userType == 2 ? 1 : 2);
         boolean success = jobService.publishJob(job);
-        if (!success) {
-            return Result.error("发布失败");
-        }
-        return Result.success("发布成功");
+        return success ? Result.success("发布成功") : Result.error("发布失败");
     }
 
     @ApiOperation("编辑岗位")

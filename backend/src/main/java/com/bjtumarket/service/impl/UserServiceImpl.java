@@ -34,7 +34,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         String md5Password = DigestUtils.md5DigestAsHex(user.getPassword().getBytes(StandardCharsets.UTF_8));
         user.setPassword(md5Password);
-        user.setStatus(user.getUserType() != null && user.getUserType() == 2 ? 0 : 1);
+        // S3: 深度合作企业自动审核通过
+        if (user.getUserType() != null && user.getUserType() == 2) {
+            boolean isDeepCooperation = user.getCooperationType() != null && user.getCooperationType() == 1;
+            user.setStatus(isDeepCooperation ? 1 : 0);
+        } else {
+            user.setStatus(1);
+        }
+        if (user.getMemberLevel() == null) user.setMemberLevel(0);
+        if (user.getCooperationType() == null) user.setCooperationType(2);
         user.setCreateTime(LocalDateTime.now());
         user.setUpdateTime(LocalDateTime.now());
         return this.save(user);

@@ -23,4 +23,6 @@ public interface InternshipService extends IService<Internship> {
     Map<String, Object> getCertificateData(Long internshipId);
 
     List<Map<String, Object>> getPublisherInternships(Long publisherId);
+
+    boolean studentReview(Long internshipId, Long studentId, Integer rating, String review);
 }

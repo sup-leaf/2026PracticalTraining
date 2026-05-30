@@ -37,6 +37,10 @@ public class User {
 
     private Integer status; // 0-禁用 1-正常
 
+    private Integer memberLevel; // 0-免费 1-VIP
+
+    private Integer cooperationType; // 1-深度合作 2-校外普通
+
     private LocalDateTime createTime;
 
     private LocalDateTime updateTime;

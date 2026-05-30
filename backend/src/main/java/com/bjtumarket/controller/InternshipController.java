@@ -121,4 +121,15 @@ public class InternshipController {
         Long userId = (Long) request.getAttribute("userId");
         return Result.success(internshipService.getPublisherInternships(userId));
     }
+
+    @ApiOperation("学生对实习/企业进行评价")
+    @PostMapping("/rate/student")
+    public Result<String> rateStudent(HttpServletRequest request,
+                                       @RequestParam Long internshipId,
+                                       @RequestParam Integer rating,
+                                       @RequestParam(required = false) String review) {
+        Long userId = (Long) request.getAttribute("userId");
+        boolean ok = internshipService.studentReview(internshipId, userId, rating, review);
+        return ok ? Result.success("评价成功") : Result.error("评价失败，请确认实习存在且未重复评价");
+    }
 }

@@ -112,9 +112,14 @@ public class AdminController {
     @ApiOperation("实习统计（总人次/进行中/专业分布/Top企业）")
     @GetMapping("/stats/internship")
     public Result<Map<String, Object>> internshipStats(HttpServletRequest request) {
-        if (!isTeacher(request)) {
-            return Result.error(403, "无权限访问");
-        }
+        if (!isTeacher(request)) return Result.error(403, "无权限访问");
         return Result.success(adminService.internshipStats());
+    }
+
+    @ApiOperation("企业评价排行（学生对企业的平均评分）")
+    @GetMapping("/stats/enterprise-rating")
+    public Result<Map<String, Object>> enterpriseRatingStats(HttpServletRequest request) {
+        if (!isTeacher(request)) return Result.error(403, "无权限访问");
+        return Result.success(adminService.enterpriseRatingStats());
     }
 }

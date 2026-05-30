@@ -91,6 +91,16 @@ export default {
   getCertificate: (id) => api.get(`/internship/certificate/${id}`),
   getPublisherInternships: () => api.get('/internship/publisher'),
 
+  studentReview: (internshipId, rating, review) => {
+    const params = { internshipId, rating }
+    if (review) params.review = review
+    return api.post('/internship/rate/student', null, { params })
+  },
+  getEnterpriseRating: () => api.get('/admin/stats/enterprise-rating'),
+  getVipAlerts: () => api.get('/member/alerts'),
+  getMemberLevel: () => api.get('/member/level'),
+  toggleVip: () => api.put('/member/toggle'),
+
   publishTeam: (data) => api.post('/competition/publish', data),
   getTeamList: (params) => api.get('/competition/list', { params }),
   getTeamDetail: (id) => api.get(`/competition/${id}`),

@@ -15,4 +15,6 @@ public class RegisterRequest {
     private String teacherNo; // 工号（教师）
     private String phone;
     private String email;
+    private Integer cooperationType; // 合作类型（企业可选）：1深度合作 2校外普通
+    private Integer memberLevel; // 会员等级（学生可选）：0免费 1VIP
 }

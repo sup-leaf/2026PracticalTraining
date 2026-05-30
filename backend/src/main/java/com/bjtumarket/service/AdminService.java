@@ -21,4 +21,6 @@ public interface AdminService {
     Map<String, Object> hotJobs();
 
     Map<String, Object> internshipStats();
+
+    Map<String, Object> enterpriseRatingStats();
 }

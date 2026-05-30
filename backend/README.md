@@ -133,7 +133,7 @@ mvn spring-boot:run
 { "code": 401, "message": "用户名或密码错误" }
 ```
 
-### 全部接口速查（40 个）
+### 全部接口速查（42 个）
 
 #### 认证 —— `/api/auth`
 ```
@@ -189,7 +189,8 @@ GET    /api/internship/logs?internshipId=         查看日志列表
 PUT    /api/internship/end?internshipId=          结束实习
 PUT    /api/internship/rate?internshipId=&rating=&review=  企业评分(1-5)
 GET    /api/internship/certificate/{id}           实习证明数据
-GET    /api/internship/publisher                  企业查看实习生
+GET   /api/internship/publisher                  企业查看实习生
+POST  /api/internship/rate/student?internshipId=&rating=&review=  学生对实习企业评价
 ```
 
 #### 管理员 —— `/api/admin`（仅教师 userType=3）
@@ -202,6 +203,7 @@ GET   /api/admin/stats/trend           → {trend: [{date, count}]}  近7天
 GET   /api/admin/stats/top-enterprises → {enterprises: [{rank, name, jobCount, applicantCount}]}
 GET   /api/admin/stats/hot-jobs        → {jobs: [{rank, title, company, applicants}]}
 GET   /api/admin/stats/internship      → {totalInternships, activeInternships, majorDistribution, topCompanies}
+GET   /api/admin/stats/enterprise-rating → {totalReviews, averageRating}
 ```
 
 #### 文件 —— `/api/file`

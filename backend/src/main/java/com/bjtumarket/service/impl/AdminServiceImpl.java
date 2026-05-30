@@ -3,8 +3,10 @@ package com.bjtumarket.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bjtumarket.entity.User;
+import com.bjtumarket.entity.InternshipStudentReview;
 import com.bjtumarket.mapper.DeliveryMapper;
 import com.bjtumarket.mapper.InternshipMapper;
+import com.bjtumarket.mapper.InternshipStudentReviewMapper;
 import com.bjtumarket.mapper.JobMapper;
 import com.bjtumarket.mapper.ResumeMapper;
 import com.bjtumarket.mapper.UserMapper;
@@ -32,6 +34,9 @@ public class AdminServiceImpl implements AdminService {
 
     @Autowired
     private InternshipMapper internshipMapper;
+
+    @Autowired
+    private InternshipStudentReviewMapper studentReviewMapper;
 
     @Override
     public Page<User> listEnterprises(Integer page, Integer size, Integer status, String keyword) {
@@ -144,6 +149,17 @@ public class AdminServiceImpl implements AdminService {
         }
         result.put("majorDistribution", majorList);
         result.put("topCompanies", internshipMapper.topCompanies());
+        return result;
+    }
+
+    @Override
+    public Map<String, Object> enterpriseRatingStats() {
+        Map<String, Object> result = new LinkedHashMap<>();
+        List<InternshipStudentReview> reviews = studentReviewMapper.selectList(null);
+        long total = reviews.size();
+        double avg = reviews.stream().mapToInt(InternshipStudentReview::getRating).average().orElse(0);
+        result.put("totalReviews", total);
+        result.put("averageRating", Math.round(avg * 10.0) / 10.0);
         return result;
     }
 }

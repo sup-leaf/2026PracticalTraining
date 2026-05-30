@@ -71,6 +71,21 @@
         </el-col>
       </el-row>
 
+      <el-row :gutter="20" class="main-stats">
+        <el-col :span="6">
+          <div class="stat-box" style="border: 1px solid rgba(230,162,60,0.3);">
+            <div class="stat-value" style="color: #E6A23C;">{{ entRating.averageRating || '—' }}</div>
+            <div class="stat-label">企业平均评分</div>
+          </div>
+        </el-col>
+        <el-col :span="6">
+          <div class="stat-box" style="border: 1px solid rgba(103,194,58,0.3);">
+            <div class="stat-value" style="color: #67C23A;">{{ entRating.totalReviews || 0 }}</div>
+            <div class="stat-label">学生评价次数</div>
+          </div>
+        </el-col>
+      </el-row>
+
       <el-row :gutter="20" class="charts-row">
         <el-col :span="12">
           <el-card class="chart-card">
@@ -155,7 +170,8 @@ export default {
       majors: [],
       trendData: [],
       topEnterprises: [],
-      hotJobs: []
+      hotJobs: [],
+      entRating: {}
     }
   },
   computed: {
@@ -181,6 +197,10 @@ export default {
         this.trendData = (tr.data && tr.data.trend) ? tr.data.trend : []
         this.topEnterprises = (te.data && te.data.enterprises) ? te.data.enterprises : []
         this.hotJobs = (hj.data && hj.data.jobs) ? hj.data.jobs : []
+        try {
+          const er = await api.getEnterpriseRating()
+          this.entRating = er.data || {}
+        } catch (e) { /* ignore */ }
       } catch (e) {
         // ignore
       }

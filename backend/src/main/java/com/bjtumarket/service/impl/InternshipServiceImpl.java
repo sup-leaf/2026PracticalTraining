@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bjtumarket.entity.*;
 import com.bjtumarket.mapper.InternshipLogMapper;
 import com.bjtumarket.mapper.InternshipMapper;
+import com.bjtumarket.mapper.InternshipStudentReviewMapper;
 import com.bjtumarket.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,9 @@ public class InternshipServiceImpl extends ServiceImpl<InternshipMapper, Interns
 
     @Autowired
     private InternshipLogMapper logMapper;
+
+    @Autowired
+    private InternshipStudentReviewMapper studentReviewMapper;
 
     @Autowired
     private DeliveryService deliveryService;
@@ -233,5 +237,22 @@ public class InternshipServiceImpl extends ServiceImpl<InternshipMapper, Interns
             result.add(vo);
         }
         return result;
+    }
+
+    @Override
+    public boolean studentReview(Long internshipId, Long studentId, Integer rating, String review) {
+        Internship internship = this.getById(internshipId);
+        if (internship == null || !internship.getStudentId().equals(studentId)) return false;
+        LambdaQueryWrapper<InternshipStudentReview> w = new LambdaQueryWrapper<>();
+        w.eq(InternshipStudentReview::getInternshipId, internshipId)
+         .eq(InternshipStudentReview::getStudentId, studentId);
+        if (studentReviewMapper.selectCount(w) > 0) return false;
+        InternshipStudentReview r = new InternshipStudentReview();
+        r.setInternshipId(internshipId);
+        r.setStudentId(studentId);
+        r.setRating(rating);
+        r.setReview(review);
+        r.setCreateTime(LocalDateTime.now());
+        return studentReviewMapper.insert(r) > 0;
     }
 }
