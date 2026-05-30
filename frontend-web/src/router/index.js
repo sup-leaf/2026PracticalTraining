@@ -12,6 +12,7 @@ import JobPublish from '../views/JobPublish.vue'
 import Deliveries from '../views/Deliveries.vue'
 import Resume from '../views/Resume.vue'
 import Internship from '../views/Internship.vue'
+import CompetitionTeam from '../views/CompetitionTeam.vue'
 
 const routes = [
   { path: '/', redirect: '/login' },
@@ -31,6 +32,7 @@ const routes = [
       { path: 'publish', component: JobPublish },
       { path: 'deliveries', component: Deliveries },
       { path: 'internship', component: Internship },
+      { path: 'competition', component: CompetitionTeam },
       { path: 'resume', component: Resume }
     ]
   }

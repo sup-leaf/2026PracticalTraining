@@ -77,6 +77,10 @@
               <el-icon><TrophyBase /></el-icon>
               <span>科研竞赛管理</span>
             </el-menu-item>
+            <el-menu-item index="/home/competition">
+              <el-icon><Flag /></el-icon>
+              <span>竞赛组队</span>
+            </el-menu-item>
           </el-sub-menu>
 
           <el-sub-menu index="sub-profile">
@@ -112,6 +116,10 @@
             <el-icon><Reading /></el-icon>
             <span>科研竞赛</span>
           </el-menu-item>
+          <el-menu-item index="/home/competition">
+            <el-icon><Flag /></el-icon>
+            <span>竞赛组队</span>
+          </el-menu-item>
           <el-menu-item index="/home/resume">
             <el-icon><User /></el-icon>
             <span>我的简历</span>
@@ -144,7 +152,7 @@
 import {
   OfficeBuilding, Reading, DocumentChecked, PieChart,
   List, Plus, Document, User, TrendCharts, Briefcase,
-  Message, Checked, TrophyBase, EditPen, Collection
+  Message, Checked, TrophyBase, EditPen, Collection, Flag
 } from '@element-plus/icons-vue'
 
 export default {
@@ -152,7 +160,7 @@ export default {
   components: {
     OfficeBuilding, Reading, DocumentChecked, PieChart,
     List, Plus, Document, User, TrendCharts, Briefcase,
-  Message, Checked, TrophyBase, EditPen, Collection
+    Message, Checked, TrophyBase, EditPen, Collection, Flag
   },
   data() {
     return {
@@ -179,6 +187,7 @@ export default {
         '/home/publish': '发布岗位',
         '/home/deliveries': '投递管理',
         '/home/internship': '实习管理',
+        '/home/competition': '竞赛组队',
         '/home/resume': '我的简历'
       }
       return titles[path] || '首页'

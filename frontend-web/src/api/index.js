@@ -89,5 +89,14 @@ export default {
     return api.put('/internship/rate', null, { params })
   },
   getCertificate: (id) => api.get(`/internship/certificate/${id}`),
-  getPublisherInternships: () => api.get('/internship/publisher')
+  getPublisherInternships: () => api.get('/internship/publisher'),
+
+  publishTeam: (data) => api.post('/competition/publish', data),
+  getTeamList: (params) => api.get('/competition/list', { params }),
+  getTeamDetail: (id) => api.get(`/competition/${id}`),
+  applyTeam: (teamId, note) => api.post(`/competition/apply?teamId=${teamId}&note=${encodeURIComponent(note || '')}`),
+  auditTeamApplication: (applicationId, status) => api.post(`/competition/audit?applicationId=${applicationId}&status=${status}`),
+  getTeamApplications: (teamId) => api.get(`/competition/team/${teamId}/applications`),
+  getMyTeamApplications: () => api.get('/competition/my/applications'),
+  getMyTeams: () => api.get('/competition/my/teams')
 }
