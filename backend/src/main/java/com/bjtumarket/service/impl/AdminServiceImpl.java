@@ -3,6 +3,7 @@ package com.bjtumarket.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bjtumarket.entity.User;
+import com.bjtumarket.entity.Job;
 import com.bjtumarket.entity.InternshipStudentReview;
 import com.bjtumarket.mapper.DeliveryMapper;
 import com.bjtumarket.mapper.InternshipMapper;
@@ -85,6 +86,22 @@ public class AdminServiceImpl implements AdminService {
                 : 0);
         result.put("internshipTotal", internshipMapper.countAll());
         result.put("internshipActive", internshipMapper.countActive());
+
+        // S6.1: 预警——低于75%的专业
+        List<Map<String, Object>> warnings = new ArrayList<>();
+        for (Map<String, Object> row : majorStats) {
+            long studentCount = ((Number) row.getOrDefault("studentCount", 0)).longValue();
+            long acceptedCount = ((Number) row.getOrDefault("acceptedCount", 0)).longValue();
+            double rate = studentCount > 0 ? Math.round(acceptedCount * 10000.0 / studentCount) / 100.0 : 0;
+            if (rate < 75 && studentCount > 0) {
+                Map<String, Object> w = new HashMap<>();
+                w.put("major", row.get("major"));
+                w.put("rate", rate);
+                w.put("threshold", 75);
+                warnings.add(w);
+            }
+        }
+        result.put("warnings", warnings);
         return result;
     }
 
@@ -160,6 +177,20 @@ public class AdminServiceImpl implements AdminService {
         double avg = reviews.stream().mapToInt(InternshipStudentReview::getRating).average().orElse(0);
         result.put("totalReviews", total);
         result.put("averageRating", Math.round(avg * 10.0) / 10.0);
+        return result;
+    }
+
+    @Override
+    public Map<String, Object> staleJobs() {
+        List<Job> jobs = jobMapper.selectList(
+            new LambdaQueryWrapper<Job>()
+                .eq(Job::getStatus, 1)
+                .eq(Job::getDeliveryCount, 0)
+                .lt(Job::getCreateTime, java.time.LocalDateTime.now().minusDays(14))
+        );
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("staleJobs", jobs);
+        result.put("count", jobs.size());
         return result;
     }
 }

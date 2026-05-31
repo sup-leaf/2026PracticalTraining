@@ -2,6 +2,8 @@ package com.bjtumarket.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bjtumarket.entity.CompetitionTeam;
+import com.bjtumarket.entity.TeamMessage;
+import com.bjtumarket.mapper.TeamMessageMapper;
 import com.bjtumarket.service.CompetitionService;
 import com.bjtumarket.vo.Result;
 import io.swagger.annotations.Api;
@@ -10,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +25,9 @@ public class CompetitionController {
 
     @Autowired
     private CompetitionService competitionService;
+
+    @Autowired
+    private TeamMessageMapper teamMessageMapper;
 
     private Long getUserId(HttpServletRequest request) {
         return (Long) request.getAttribute("userId");
@@ -105,5 +111,26 @@ public class CompetitionController {
     @GetMapping("/my/teams")
     public Result<List<CompetitionTeam>> getMyTeams(HttpServletRequest request) {
         return Result.success(competitionService.getMyTeams(getUserId(request)));
+    }
+
+    @ApiOperation("发送组队留言")
+    @PostMapping("/team/{teamId}/message")
+    public Result<String> sendMessage(@PathVariable Long teamId, @RequestParam String content, HttpServletRequest request) {
+        TeamMessage msg = new TeamMessage();
+        msg.setTeamId(teamId);
+        msg.setSenderId(getUserId(request));
+        msg.setContent(content);
+        msg.setCreateTime(LocalDateTime.now());
+        teamMessageMapper.insert(msg);
+        return Result.success("发送成功");
+    }
+
+    @ApiOperation("查看组队留言列表")
+    @GetMapping("/team/{teamId}/messages")
+    public Result<List<TeamMessage>> getMessages(@PathVariable Long teamId) {
+        List<TeamMessage> msgs = teamMessageMapper.selectList(
+            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<TeamMessage>()
+                .eq(TeamMessage::getTeamId, teamId).orderByAsc(TeamMessage::getCreateTime));
+        return Result.success(msgs);
     }
 }

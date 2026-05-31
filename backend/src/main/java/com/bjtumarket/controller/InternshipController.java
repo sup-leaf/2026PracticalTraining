@@ -2,6 +2,8 @@ package com.bjtumarket.controller;
 
 import com.bjtumarket.entity.Internship;
 import com.bjtumarket.entity.InternshipLog;
+import com.bjtumarket.entity.InternshipMessage;
+import com.bjtumarket.mapper.InternshipMessageMapper;
 import com.bjtumarket.service.InternshipService;
 import com.bjtumarket.vo.Result;
 import io.swagger.annotations.Api;
@@ -10,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -27,6 +30,9 @@ public class InternshipController {
 
     @Autowired
     private InternshipService internshipService;
+
+    @Autowired
+    private InternshipMessageMapper internshipMessageMapper;
 
     /**
      * 学生发起实习
@@ -131,5 +137,27 @@ public class InternshipController {
         Long userId = (Long) request.getAttribute("userId");
         boolean ok = internshipService.studentReview(internshipId, userId, rating, review);
         return ok ? Result.success("评价成功") : Result.error("评价失败，请确认实习存在且未重复评价");
+    }
+
+    @ApiOperation("发送实习沟通消息")
+    @PostMapping("/{internshipId}/message")
+    public Result<String> sendMessage(@PathVariable Long internshipId, @RequestParam String content, HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        InternshipMessage msg = new InternshipMessage();
+        msg.setInternshipId(internshipId);
+        msg.setSenderId(userId);
+        msg.setContent(content);
+        msg.setCreateTime(LocalDateTime.now());
+        internshipMessageMapper.insert(msg);
+        return Result.success("发送成功");
+    }
+
+    @ApiOperation("查看实习沟通消息列表")
+    @GetMapping("/{internshipId}/messages")
+    public Result<List<InternshipMessage>> getMessages(@PathVariable Long internshipId) {
+        List<InternshipMessage> msgs = internshipMessageMapper.selectList(
+            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<InternshipMessage>()
+                .eq(InternshipMessage::getInternshipId, internshipId).orderByAsc(InternshipMessage::getCreateTime));
+        return Result.success(msgs);
     }
 }

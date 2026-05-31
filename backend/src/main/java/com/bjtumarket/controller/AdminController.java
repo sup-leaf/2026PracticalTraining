@@ -122,4 +122,11 @@ public class AdminController {
         if (!isTeacher(request)) return Result.error(403, "无权限访问");
         return Result.success(adminService.enterpriseRatingStats());
     }
+
+    @ApiOperation("无人投递的过期岗位（超过14天无人投递）")
+    @GetMapping("/stats/stale-jobs")
+    public Result<Map<String, Object>> staleJobs(HttpServletRequest request) {
+        if (!isTeacher(request)) return Result.error(403, "无权限访问");
+        return Result.success(adminService.staleJobs());
+    }
 }

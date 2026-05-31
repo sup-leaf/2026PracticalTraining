@@ -8,6 +8,7 @@
       <template v-if="userType === 1">
         <el-tab-pane label="我的实习" name="my" />
         <el-tab-pane label="提交日志" name="log" />
+        <el-tab-pane label="实习沟通" name="chat" />
         <el-tab-pane label="实习证明" name="cert" />
       </template>
       <template v-if="userType === 2">
@@ -90,6 +91,24 @@
         <div v-else class="empty-tip">暂无日志</div>
       </div>
       <div v-else class="empty-tip">无可提交的进行中实习</div>
+    </el-card>
+
+    <!-- ===== 实习沟通 ===== -->
+    <el-card v-if="activeTab === 'chat'" v-loading="chatLoading">
+      <div v-if="activeInternship">
+        <div style="max-height: 300px; overflow-y: auto; margin-bottom: 10px;" ref="chatBox">
+          <div v-for="m in imessages" :key="m.id" style="padding: 6px 0; border-bottom: 1px solid #eee;">
+            <strong>{{ m.senderId === userId ? '我' : '对方' }}</strong>
+            <span style="color: #999; font-size: 12px; margin-left: 8px;">{{ formatTime(m.createTime) }}</span>
+            <p style="margin: 4px 0;">{{ m.content }}</p>
+          </div>
+          <div v-if="imessages.length === 0" style="color: #999; padding: 10px 0;">暂无消息，在此与企业/导师沟通</div>
+        </div>
+        <el-input v-model="imsgContent" placeholder="输入消息..." @keyup.enter="sendInternMsg" :disabled="msgSending">
+          <template #append><el-button @click="sendInternMsg" :loading="msgSending">发送</el-button></template>
+        </el-input>
+      </div>
+      <div v-else class="empty-tip">暂无进行中的实习</div>
     </el-card>
 
     <!-- ===== 学生：实习证明 ===== -->
@@ -215,13 +234,19 @@ export default {
       selfReviewVisible: false,
       selfReviewTarget: null,
       selfRateScore: 3,
-      selfRateReview: ''
+      selfRateReview: '',
+      imessages: [],
+      imsgContent: '',
+      chatLoading: false,
+      msgSending: false,
+      userId: ''
     }
   },
   mounted() {
     this.userType = parseInt(localStorage.getItem('userType') || 1)
     if (this.userType === 2) this.activeTab = 'pubList'
     else if (this.userType === 3) this.activeTab = 'stats'
+    this.userId = localStorage.getItem('userId') || ''
     this.loadData()
   },
   computed: {
@@ -230,7 +255,10 @@ export default {
     }
   },
   methods: {
-    onTabChange(tab) { this.loadData() },
+    onTabChange(tab) {
+      if (tab === 'chat') { this.loadImessages(); return }
+      this.loadData()
+    },
     async loadData() {
       this.loading = true
       try {
@@ -343,6 +371,35 @@ export default {
           this.loadData()
         } else { this.$message.error(res.message || '评价失败') }
       } catch (e) { this.$message.error('评价失败') }
+    },
+    async loadImessages() {
+      if (!this.activeInternship) return
+      this.chatLoading = true
+      try {
+        const res = await api.getInternshipMessages(this.activeInternship.id)
+        this.imessages = res.data || []
+      } catch (e) { /* ignore */ }
+      finally { this.chatLoading = false }
+    },
+    async sendInternMsg() {
+      const text = this.imsgContent.trim()
+      if (!text || !this.activeInternship) return
+      this.imsgContent = ''
+      this.msgSending = true
+      // 立即添加到本地列表
+      this.imessages.push({ id: Date.now(), senderId: parseInt(this.userId), content: text, createTime: new Date().toISOString() })
+      try {
+        await api.sendInternshipMessage(this.activeInternship.id, text)
+        this.loadImessages()
+      } catch (e) {
+        this.$message.error('发送失败')
+        this.loadImessages()
+      }
+      finally { this.msgSending = false }
+    },
+    formatTime(t) {
+      if (!t) return ''
+      return (t + '').replace('T', ' ')
     }
   }
 }

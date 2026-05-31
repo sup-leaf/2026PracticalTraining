@@ -101,6 +101,14 @@ export default {
   getMemberLevel: () => api.get('/member/level'),
   toggleVip: () => api.put('/member/toggle'),
 
+  getTimeline: () => api.get('/profile/timeline'),
+  getStaleJobs: () => api.get('/admin/stats/stale-jobs'),
+
+  sendTeamMessage: (teamId, content) => api.post(`/competition/team/${teamId}/message?content=${encodeURIComponent(content)}`),
+  getTeamMessages: (teamId) => api.get(`/competition/team/${teamId}/messages`),
+  sendInternshipMessage: (internshipId, content) => api.post(`/internship/${internshipId}/message?content=${encodeURIComponent(content)}`),
+  getInternshipMessages: (internshipId) => api.get(`/internship/${internshipId}/messages`),
+
   publishTeam: (data) => api.post('/competition/publish', data),
   getTeamList: (params) => api.get('/competition/list', { params }),
   getTeamDetail: (id) => api.get(`/competition/${id}`),

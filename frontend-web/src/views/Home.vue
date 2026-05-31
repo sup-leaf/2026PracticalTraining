@@ -96,6 +96,10 @@
               <el-icon><Collection /></el-icon>
               <span>实习管理</span>
             </el-menu-item>
+            <el-menu-item index="/home/timeline">
+              <el-icon><Clock /></el-icon>
+              <span>成长足迹</span>
+            </el-menu-item>
           </el-sub-menu>
         </template>
 
@@ -119,6 +123,10 @@
           <el-menu-item index="/home/competition">
             <el-icon><Flag /></el-icon>
             <span>竞赛组队</span>
+          </el-menu-item>
+          <el-menu-item index="/home/timeline">
+            <el-icon><Clock /></el-icon>
+            <span>成长足迹</span>
           </el-menu-item>
           <el-menu-item index="/home/resume">
             <el-icon><User /></el-icon>
@@ -158,7 +166,7 @@
 import {
   OfficeBuilding, Reading, DocumentChecked, PieChart,
   List, Plus, Document, User, TrendCharts, Briefcase,
-  Message, Checked, TrophyBase, EditPen, Collection, Flag
+  Message, Checked, TrophyBase, EditPen, Collection, Flag, Clock
 } from '@element-plus/icons-vue'
 import api from '../api'
 
@@ -167,7 +175,7 @@ export default {
   components: {
     OfficeBuilding, Reading, DocumentChecked, PieChart,
     List, Plus, Document, User, TrendCharts, Briefcase,
-    Message, Checked, TrophyBase, EditPen, Collection, Flag
+    Message, Checked, TrophyBase, EditPen, Collection, Flag, Clock
   },
   data() {
     return {
@@ -196,6 +204,7 @@ export default {
         '/home/deliveries': '投递管理',
         '/home/internship': '实习管理',
         '/home/competition': '竞赛组队',
+        '/home/timeline': '成长足迹',
         '/home/resume': '我的简历'
       }
       return titles[path] || '首页'

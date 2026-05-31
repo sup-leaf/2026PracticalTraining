@@ -133,7 +133,7 @@ mvn spring-boot:run
 { "code": 401, "message": "用户名或密码错误" }
 ```
 
-### 全部接口速查（42 个）
+### 全部接口速查（46 个）
 
 #### 认证 —— `/api/auth`
 ```
@@ -180,6 +180,20 @@ GET    /api/research/my/applications       我的申请
 GET    /api/research/my/projects           我发布的项目
 ```
 
+#### 竞赛组队 —— `/api/competition`
+```
+POST   /api/competition/publish               发布组队招募
+GET    /api/competition/list?page=&size=&keyword=&skillTag=  组队广场
+GET    /api/competition/{id}                  队伍详情
+POST   /api/competition/apply?teamId=&note=   申请入队
+POST   /api/competition/audit?applicationId=&status=  队长审核
+GET    /api/competition/team/{teamId}/applications  队伍申请列表
+GET    /api/competition/my/applications       我的申请
+GET    /api/competition/my/teams              我发布的队伍
+POST   /api/competition/team/{teamId}/message?content=  发送组队消息
+GET    /api/competition/team/{teamId}/messages  查看组队消息
+```
+
 #### 实习 —— `/api/internship`
 ```
 POST   /api/internship/start?deliveryId=          学生发起实习（仅已录用投递）
@@ -191,6 +205,20 @@ PUT    /api/internship/rate?internshipId=&rating=&review=  企业评分(1-5)
 GET    /api/internship/certificate/{id}           实习证明数据
 GET   /api/internship/publisher                  企业查看实习生
 POST  /api/internship/rate/student?internshipId=&rating=&review=  学生对实习企业评价
+POST  /api/internship/{internshipId}/message?content=  发送实习沟通消息
+GET   /api/internship/{internshipId}/messages     查看实习消息列表
+```
+
+#### 会员 —— `/api/member`
+```
+GET   /api/member/level       查询当前会员等级
+PUT   /api/member/toggle      切换VIP状态（0↔1，测试用）
+GET   /api/member/alerts      VIP专属提醒（最新3个岗位）
+```
+
+#### 成长足迹 —— `/api/profile`
+```
+GET   /api/profile/timeline   个人时间线（聚合实习+科研+竞赛履历）
 ```
 
 #### 管理员 —— `/api/admin`（仅教师 userType=3）
@@ -204,6 +232,7 @@ GET   /api/admin/stats/top-enterprises → {enterprises: [{rank, name, jobCount,
 GET   /api/admin/stats/hot-jobs        → {jobs: [{rank, title, company, applicants}]}
 GET   /api/admin/stats/internship      → {totalInternships, activeInternships, majorDistribution, topCompanies}
 GET   /api/admin/stats/enterprise-rating → {totalReviews, averageRating}
+GET   /api/admin/stats/stale-jobs    → {staleJobs: [...], count}  超14天无人投递的岗位
 ```
 
 #### 文件 —— `/api/file`
@@ -220,6 +249,8 @@ POST  /api/file/upload        multipart/form-data, file字段  → 文件URL（P
 | deliveryStatus | 0→1→2→3↔4 | 待查看→已查看→面试中→已录用(可撤回)/已拒绝(可重开) |
 | userStatus | 0 / 1 / 2 | 待审核 / 正常 / 已拒绝 |
 | internship status | 0 / 1 / 2 | 进行中 / 已完成 / 提前终止 |
+| memberLevel | 0 / 1 | 免费 / VIP |
+| cooperationType | 1 / 2 | 深度合作 / 校外普通 |
 
 ---
 
@@ -235,8 +266,13 @@ POST  /api/file/upload        multipart/form-data, file字段  → 文件URL（P
 | `t_research_application` | 科研申请 | project_id, student_id, status(0-2), note |
 | `t_internship` | 实习 | student_id, job_id, delivery_id, status(0-2), rating, review |
 | `t_internship_log` | 实习日志 | internship_id, week_num, content |
+| `t_internship_student_review` | 学生评企业 | internship_id, student_id, rating, review |
+| `t_team_message` | 组队消息 | team_id, sender_id, content |
+| `t_internship_message` | 实习消息 | internship_id, sender_id, content |
+| `t_competition_team` | 竞赛队伍 | title, competition_name, leader_id, max_members, status |
+| `t_team_application` | 入队申请 | team_id, student_id, status(0-2), note |
 
-建表脚本：`sql/init.sql`（基础表）/ `sql/research.sql`（科研表）/ `sql/internship.sql`（实习表）
+建表脚本：`sql/init.sql` / `sql/research.sql` / `sql/internship.sql` / `sql/message.sql` / `sql/supplement.sql` / `sql/competition.sql`
 
 ---
 

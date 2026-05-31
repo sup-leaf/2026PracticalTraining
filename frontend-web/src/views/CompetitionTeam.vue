@@ -173,6 +173,16 @@
         </el-table-column>
       </el-table>
       <div v-if="applicationList.length === 0" class="empty-tip">暂无申请</div>
+      <el-divider />
+      <div style="max-height: 200px; overflow-y: auto; margin-bottom: 10px;">
+        <div v-for="m in messages" :key="m.id" style="padding: 4px 0; border-bottom: 1px solid #eee;">
+          <strong>{{ m.senderId }}</strong> <span style="color: #999; font-size: 12px;">{{ formatTime(m.createTime) }}</span>
+          <p style="margin: 2px 0;">{{ m.content }}</p>
+        </div>
+      </div>
+      <el-input v-model="msgContent" placeholder="输入留言..." @keyup.enter="sendMsg">
+        <template #append><el-button @click="sendMsg">发送</el-button></template>
+      </el-input>
     </el-dialog>
   </div>
 </template>
@@ -208,7 +218,9 @@ export default {
 
       appListVisible: false,
       appLoading: false,
-      applicationList: []
+      applicationList: [],
+      messages: [],
+      msgContent: ''
     }
   },
   mounted() {
@@ -289,9 +301,12 @@ export default {
       this.currentTeam = row
       this.appListVisible = true
       this.appLoading = true
+      this.messages = []
       try {
         const res = await api.getTeamApplications(row.id)
         this.applicationList = res.data || []
+        const msgRes = await api.getTeamMessages(row.id)
+        this.messages = msgRes.data || []
       } catch (e) { this.$message.error('加载失败') }
       finally { this.appLoading = false }
     },
@@ -314,6 +329,15 @@ export default {
     formatTime(time) {
       if (!time) return ''
       return (time + '').replace('T', ' ')
+    },
+    async sendMsg() {
+      if (!this.msgContent.trim()) return
+      try {
+        await api.sendTeamMessage(this.currentTeam.id, this.msgContent)
+        this.msgContent = ''
+        const msgRes = await api.getTeamMessages(this.currentTeam.id)
+        this.messages = msgRes.data || []
+      } catch (e) { this.$message.error('发送失败') }
     }
   }
 }

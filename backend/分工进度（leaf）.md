@@ -104,7 +104,6 @@
 
 | 编号 | 事项 | 说明 |
 |------|------|------|
-| 1.5 | 全局异常处理 | `@ControllerAdvice` 统一拦截返回 Result.error |
 | 7.2 | 腾讯云 COS | 替换 FileController 本地存储 → COS |
 | 10.3 | 接口压力测试 | JMeter 或脚本，50/100/200 并发 |
 
