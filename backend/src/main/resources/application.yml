@@ -7,6 +7,8 @@ upload:
 spring:
   application:
     name: campus-market
+  config:
+    import: optional:classpath:application-local.yml
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
@@ -14,7 +16,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/campus_market?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
     username: root
-    password: 1280760251a
+    password: your_password_here
   redis:
     host: localhost
     port: 6379

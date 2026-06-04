@@ -57,6 +57,7 @@
 
 | 事项 | 说明 |
 |------|------|
+| 全局异常处理 | `GlobalExceptionHandler.java`，`@RestControllerAdvice` 统一拦截未捕获异常 |
 | 投递状态撤回 | 已录用(3) → 取消录用退回面试中(2)；已拒绝(4) → 重新打开退回已查看(1) |
 | 实习历史列表 | `GET /api/internship/my` 改为返回全部实习记录（按时间倒序），前端卡片列表展示 |
 | 代码注释 | `InternshipServiceImpl.java` 和 `InternshipController.java` 每个方法加 Javadoc |
@@ -104,7 +105,6 @@
 
 | 编号 | 事项 | 说明 |
 |------|------|------|
-| 7.2 | 腾讯云 COS | 替换 FileController 本地存储 → COS |
 | 10.3 | 接口压力测试 | JMeter 或脚本，50/100/200 并发 |
 
 ---
