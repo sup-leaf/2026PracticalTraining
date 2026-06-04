@@ -7,6 +7,7 @@ backend/uploads/
 backend/src/main/resources/application-cos.yml
 backend/src/main/resources/application-cos.properties
 backend/src/main/resources/application-local.yml
+backend/src/main/resources/application-ai.properties
 
 # frontend
 frontend-web/node_modules/

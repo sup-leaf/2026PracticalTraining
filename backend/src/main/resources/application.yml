@@ -16,10 +16,15 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/campus_market?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
     username: root
-    password: your_password_here
+    password: 1280760251a
   redis:
     host: localhost
     port: 6379
+
+ai:
+  dashscope:
+    api-key:
+    model: qwen-plus
 
 mybatis-plus:
   mapper-locations: classpath:mapper/**/*.xml
