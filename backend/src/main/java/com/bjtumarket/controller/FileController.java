@@ -46,7 +46,9 @@ public class FileController {
         }
 
         String datePath = LocalDate.now().toString().replace("-", "/");
-        String newFileName = UUID.randomUUID().toString().replace("-", "") + suffix;
+        String safeName = originalFilename.substring(0, originalFilename.lastIndexOf("."))
+                .replaceAll("[^a-zA-Z0-9\\u4e00-\\u9fa5._-]", "_");
+        String newFileName = UUID.randomUUID().toString().replace("-", "").substring(0, 8) + "_" + safeName + suffix;
         String key = datePath + "/" + newFileName;
 
         // COS 上传

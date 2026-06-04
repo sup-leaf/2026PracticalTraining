@@ -3,10 +3,12 @@ package com.bjtumarket.controller;
 import com.bjtumarket.entity.Resume;
 import com.bjtumarket.service.AIService;
 import com.bjtumarket.service.ResumeService;
+import com.bjtumarket.util.CosUtil;
 import com.bjtumarket.vo.Result;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -23,6 +25,12 @@ public class ResumeController {
 
     @Autowired
     private AIService aiService;
+
+    @Autowired
+    private CosUtil cosUtil;
+
+    @Value("${cos.base-url:}")
+    private String cosBaseUrl;
 
     @ApiOperation("查看我的简历")
     @GetMapping("/detail")
@@ -56,10 +64,17 @@ public class ResumeController {
     public Result<String> saveResume(@RequestBody Resume resume, HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
         resume.setUserId(userId);
-        boolean success = resumeService.saveOrUpdateResume(resume);
-        if (!success) {
-            return Result.error("保存失败");
+        // 删除 COS 上的旧简历文件
+        if (cosUtil.isEnabled() && resume.getFileUrl() != null) {
+            Resume existing = resumeService.getResumeByUserId(userId);
+            if (existing != null && existing.getFileUrl() != null
+                    && !existing.getFileUrl().equals(resume.getFileUrl())
+                    && existing.getFileUrl().startsWith(cosBaseUrl)) {
+                String oldKey = existing.getFileUrl().substring(cosBaseUrl.length() + 1);
+                cosUtil.delete(oldKey);
+            }
         }
-        return Result.success("保存成功");
+        boolean success = resumeService.saveOrUpdateResume(resume);
+        return success ? Result.success("保存成功") : Result.error("保存失败");
     }
 }

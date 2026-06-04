@@ -57,6 +57,12 @@ public class CosUtil {
         return enabled && cosClient != null;
     }
 
+    public void delete(String key) {
+        if (!isEnabled()) return;
+        cosClient.deleteObject(bucket, key);
+        System.out.println("[COS] 已删除: " + key);
+    }
+
     public String upload(MultipartFile file, String key) throws IOException {
         File tempFile = File.createTempFile("cos-", key.substring(key.lastIndexOf(".")));
         try (FileOutputStream fos = new FileOutputStream(tempFile)) {
