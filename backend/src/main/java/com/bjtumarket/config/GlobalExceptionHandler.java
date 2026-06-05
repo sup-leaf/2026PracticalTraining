@@ -1,12 +1,18 @@
 package com.bjtumarket.config;
 
 import com.bjtumarket.vo.Result;
+import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(RedisConnectionFailureException.class)
+    public Result<String> handleRedisDown(RedisConnectionFailureException e) {
+        return Result.error(503, "缓存服务暂不可用，请稍后再试");
+    }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public Result<String> handleValidation(MethodArgumentNotValidException e) {

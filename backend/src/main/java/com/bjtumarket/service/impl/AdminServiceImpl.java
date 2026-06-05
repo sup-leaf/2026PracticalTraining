@@ -13,6 +13,8 @@ import com.bjtumarket.mapper.ResumeMapper;
 import com.bjtumarket.mapper.UserMapper;
 import com.bjtumarket.service.AdminService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -55,6 +57,7 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
+    @CacheEvict(value = "adminStats", allEntries = true)
     public boolean auditEnterprise(Long enterpriseId, Integer status) {
         User user = userMapper.selectById(enterpriseId);
         if (user == null || !user.getUserType().equals(2)) {
@@ -65,6 +68,7 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
+    @Cacheable(value = "adminStats", key = "'overview'")
     public Map<String, Object> statsOverview() {
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("studentCount", userMapper.countStudents());
@@ -106,6 +110,7 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
+    @Cacheable(value = "adminStats", key = "'byMajor'")
     public Map<String, Object> statsByMajor() {
         List<Map<String, Object>> list = resumeMapper.countByMajor();
         for (Map<String, Object> row : list) {
@@ -120,6 +125,7 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
+    @Cacheable(value = "adminStats", key = "'trend'")
     public Map<String, Object> deliveryTrend() {
         List<Map<String, Object>> list = deliveryMapper.deliveryTrend();
         Map<String, Object> result = new LinkedHashMap<>();
@@ -128,6 +134,7 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
+    @Cacheable(value = "adminStats", key = "'topEnterprises'")
     public Map<String, Object> topEnterprises() {
         List<Map<String, Object>> list = jobMapper.topEnterprises();
         int rank = 1;
@@ -140,6 +147,7 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
+    @Cacheable(value = "adminStats", key = "'hotJobs'")
     public Map<String, Object> hotJobs() {
         List<Map<String, Object>> list = jobMapper.hotJobs();
         int rank = 1;
@@ -152,6 +160,7 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
+    @Cacheable(value = "adminStats", key = "'internship'")
     public Map<String, Object> internshipStats() {
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("totalInternships", internshipMapper.countAll());
@@ -170,6 +179,7 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
+    @Cacheable(value = "adminStats", key = "'enterpriseRating'")
     public Map<String, Object> enterpriseRatingStats() {
         Map<String, Object> result = new LinkedHashMap<>();
         List<InternshipStudentReview> reviews = studentReviewMapper.selectList(null);
@@ -181,6 +191,7 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
+    @Cacheable(value = "adminStats", key = "'staleJobs'")
     public Map<String, Object> staleJobs() {
         List<Job> jobs = jobMapper.selectList(
             new LambdaQueryWrapper<Job>()

@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bjtumarket.entity.Job;
 import com.bjtumarket.mapper.JobMapper;
 import com.bjtumarket.service.JobService;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -44,6 +45,7 @@ public class JobServiceImpl extends ServiceImpl<JobMapper, Job> implements JobSe
     }
 
     @Override
+    @CacheEvict(value = "adminStats", allEntries = true)
     public boolean publishJob(Job job) {
         job.setStatus(1);
         job.setViewCount(0);

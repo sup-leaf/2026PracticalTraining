@@ -11,6 +11,7 @@ import com.bjtumarket.service.DeliveryService;
 import com.bjtumarket.service.JobService;
 import com.bjtumarket.service.ResumeService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -27,6 +28,7 @@ public class DeliveryServiceImpl extends ServiceImpl<DeliveryMapper, Delivery> i
     private ResumeService resumeService;
 
     @Override
+    @CacheEvict(value = "adminStats", allEntries = true)
     public boolean apply(Long jobId, Long userId) {
         Job job = jobService.getById(jobId);
         if (job == null) {
@@ -97,6 +99,7 @@ public class DeliveryServiceImpl extends ServiceImpl<DeliveryMapper, Delivery> i
     }
 
     @Override
+    @CacheEvict(value = "adminStats", allEntries = true)
     public boolean updateStatus(Long deliveryId, Long publisherId, Integer deliveryStatus, String note) {
         Delivery delivery = this.getById(deliveryId);
         if (delivery == null) {
