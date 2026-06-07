@@ -16,6 +16,7 @@ uploads/
 src/main/resources/application-cos.properties
 src/main/resources/application-local.yml
 src/main/resources/application-ai.properties
+src/main/resources/application-hpj.properties
 
 # IDE
 .idea/
