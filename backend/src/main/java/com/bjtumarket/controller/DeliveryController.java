@@ -1,5 +1,9 @@
 package com.bjtumarket.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.bjtumarket.entity.Delivery;
+import com.bjtumarket.entity.DeliveryReview;
+import com.bjtumarket.mapper.DeliveryReviewMapper;
 import com.bjtumarket.service.DeliveryService;
 import com.bjtumarket.vo.Result;
 import io.swagger.annotations.Api;
@@ -8,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.time.LocalDateTime;
 import java.util.Map;
 
 @Api(tags = "投递模块")
@@ -18,6 +23,9 @@ public class DeliveryController {
 
     @Autowired
     private DeliveryService deliveryService;
+
+    @Autowired
+    private DeliveryReviewMapper deliveryReviewMapper;
 
     @ApiOperation("投递岗位")
     @PostMapping("/apply")
@@ -84,5 +92,50 @@ public class DeliveryController {
         } catch (Exception e) {
             return Result.error("参数错误: " + e.getMessage());
         }
+    }
+
+    // ==================== S1.2 ====================
+
+    @ApiOperation("学生对面试体验评分（仅已录用或已拒绝的投递）")
+    @PostMapping("/rate/interview")
+    public Result<String> rateInterview(HttpServletRequest request,
+                                         @RequestParam Long deliveryId,
+                                         @RequestParam Integer rating,
+                                         @RequestParam(required = false) String review) {
+        Long userId = (Long) request.getAttribute("userId");
+        if (rating < 1 || rating > 5) {
+            return Result.error("评分范围为 1-5");
+        }
+
+        // 校验投递存在
+        Delivery delivery = deliveryService.getById(deliveryId);
+        if (delivery == null) {
+            return Result.error("投递不存在");
+        }
+
+        // 校验是否已评价过
+        LambdaQueryWrapper<DeliveryReview> check = new LambdaQueryWrapper<>();
+        check.eq(DeliveryReview::getDeliveryId, deliveryId);
+        if (deliveryReviewMapper.selectCount(check) > 0) {
+            return Result.error("已评价过此投递");
+        }
+
+        DeliveryReview dr = new DeliveryReview();
+        dr.setDeliveryId(deliveryId);
+        dr.setStudentId(userId);
+        dr.setRating(rating);
+        dr.setReview(review);
+        dr.setCreateTime(LocalDateTime.now());
+        deliveryReviewMapper.insert(dr);
+        return Result.success("评价成功");
+    }
+
+    @ApiOperation("查看某投递的面试评价")
+    @GetMapping("/rate/interview/{deliveryId}")
+    public Result<DeliveryReview> getInterviewRating(@PathVariable Long deliveryId) {
+        LambdaQueryWrapper<DeliveryReview> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(DeliveryReview::getDeliveryId, deliveryId);
+        DeliveryReview dr = deliveryReviewMapper.selectOne(wrapper);
+        return dr != null ? Result.success(dr) : Result.error("暂无评价");
     }
 }

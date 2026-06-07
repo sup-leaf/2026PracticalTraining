@@ -4,11 +4,15 @@ import com.bjtumarket.entity.Internship;
 import com.bjtumarket.entity.InternshipLog;
 import com.bjtumarket.entity.InternshipMessage;
 import com.bjtumarket.mapper.InternshipMessageMapper;
+import com.bjtumarket.service.CertificateService;
 import com.bjtumarket.service.InternshipService;
 import com.bjtumarket.vo.Result;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -30,6 +34,9 @@ public class InternshipController {
 
     @Autowired
     private InternshipService internshipService;
+
+    @Autowired
+    private CertificateService certificateService;
 
     @Autowired
     private InternshipMessageMapper internshipMessageMapper;
@@ -116,6 +123,40 @@ public class InternshipController {
     public Result<Map<String, Object>> certificate(@PathVariable Long id) {
         Map<String, Object> data = internshipService.getCertificateData(id);
         return data.isEmpty() ? Result.error("实习不存在") : Result.success(data);
+    }
+
+    // ==================== S5.1/S5.2 ====================
+
+    @ApiOperation("下载 PDF 实习证明（含防伪水印）")
+    @GetMapping("/certificate/{id}/pdf")
+    public ResponseEntity<byte[]> certificatePdf(@PathVariable Long id) {
+        Map<String, Object> data = internshipService.getCertificateData(id);
+        if (data.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        byte[] pdfBytes = certificateService.generateCertificatePdf(data);
+
+        String filename = "internship_certificate_" + id + ".pdf";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDispositionFormData("attachment", filename);
+        headers.setContentLength(pdfBytes.length);
+
+        return ResponseEntity.ok().headers(headers).body(pdfBytes);
+    }
+
+    @ApiOperation("验证实习证明真伪（通过ID查询实习记录）")
+    @GetMapping("/verify/{internshipId}")
+    public Result<Map<String, Object>> verifyCertificate(@PathVariable Long internshipId) {
+        Map<String, Object> data = internshipService.getCertificateData(internshipId);
+        if (data.isEmpty()) {
+            return Result.error("无效的证明编号，该实习记录不存在");
+        }
+        data.put("verified", true);
+        data.put("verifyMessage", "此实习证明由校园集市平台签发，信息真实有效");
+        return Result.success(data);
     }
 
     /**

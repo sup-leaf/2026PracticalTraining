@@ -1,0 +1,30 @@
+# build
+target/
+*.class
+
+# maven wrapper
+.mvn/
+mvnw
+mvnw.cmd
+
+# uploads
+uploads/
+*.docx
+*.pdf
+
+# secret config
+src/main/resources/application-cos.properties
+src/main/resources/application-local.yml
+src/main/resources/application-ai.properties
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# logs
+*.log

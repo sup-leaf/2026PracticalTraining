@@ -57,12 +57,48 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    @CacheEvict(value = "adminStats", allEntries = true)
+    @CacheEvict(value = "adminStats", allEntries = true, beforeInvocation = true)
     public boolean auditEnterprise(Long enterpriseId, Integer status) {
         User user = userMapper.selectById(enterpriseId);
         if (user == null || !user.getUserType().equals(2)) {
             return false;
         }
+        user.setStatus(status);
+        return userMapper.updateById(user) > 0;
+    }
+
+    @Override
+    public Page<User> listUsers(Integer page, Integer size, Integer userType, String keyword) {
+        Page<User> pageParam = new Page<>(page, size);
+        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+        if (userType != null) {
+            wrapper.eq(User::getUserType, userType);
+        }
+        if (StringUtils.hasText(keyword)) {
+            wrapper.and(w -> w
+                .like(User::getUsername, keyword)
+                .or().like(User::getRealName, keyword)
+                .or().like(User::getPhone, keyword)
+                .or().like(User::getCompanyName, keyword)
+            );
+        }
+        wrapper.orderByDesc(User::getCreateTime);
+        return userMapper.selectPage(pageParam, wrapper);
+    }
+
+    @Override
+    public Map<String, Object> userStats() {
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("studentCount", userMapper.countStudents());
+        result.put("enterpriseCount", userMapper.countApprovedEnterprises());
+        result.put("teacherCount", userMapper.countTeachers());
+        return result;
+    }
+
+    @Override
+    public boolean toggleUserStatus(Long userId, Integer status) {
+        User user = userMapper.selectById(userId);
+        if (user == null) return false;
         user.setStatus(status);
         return userMapper.updateById(user) > 0;
     }
@@ -199,9 +235,21 @@ public class AdminServiceImpl implements AdminService {
                 .eq(Job::getDeliveryCount, 0)
                 .lt(Job::getCreateTime, java.time.LocalDateTime.now().minusDays(14))
         );
+        List<Map<String, Object>> list = new ArrayList<>();
+        for (Job j : jobs) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("id", j.getId());
+            m.put("title", j.getTitle());
+            m.put("description", j.getDescription());
+            m.put("jobType", j.getJobType());
+            m.put("location", j.getLocation());
+            m.put("createTime", j.getCreateTime() != null ? j.getCreateTime().toString() : null);
+            m.put("deliveryCount", j.getDeliveryCount());
+            list.add(m);
+        }
         Map<String, Object> result = new LinkedHashMap<>();
-        result.put("staleJobs", jobs);
-        result.put("count", jobs.size());
+        result.put("staleJobs", list);
+        result.put("count", list.size());
         return result;
     }
 }

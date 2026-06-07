@@ -10,6 +10,12 @@ public interface AdminService {
 
     boolean auditEnterprise(Long enterpriseId, Integer status);
 
+    Page<User> listUsers(Integer page, Integer size, Integer userType, String keyword);
+
+    Map<String, Object> userStats();
+
+    boolean toggleUserStatus(Long userId, Integer status);
+
     Map<String, Object> statsOverview();
 
     Map<String, Object> statsByMajor();

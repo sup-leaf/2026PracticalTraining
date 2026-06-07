@@ -129,4 +129,41 @@ public class AdminController {
         if (!isTeacher(request)) return Result.error(403, "无权限访问");
         return Result.success(adminService.staleJobs());
     }
+
+    @ApiOperation("用户列表（分页/类型筛选/搜索）")
+    @GetMapping("/user/list")
+    public Result<Map<String, Object>> listUsers(
+            HttpServletRequest request,
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "10") Integer size,
+            @RequestParam(required = false) Integer userType,
+            @RequestParam(required = false) String keyword) {
+        if (!isTeacher(request)) return Result.error(403, "无权限访问");
+        Page<User> pageResult = adminService.listUsers(page, size, userType, keyword);
+        Map<String, Object> result = new HashMap<>();
+        result.put("records", pageResult.getRecords());
+        result.put("total", pageResult.getTotal());
+        result.put("pages", pageResult.getPages());
+        result.put("current", pageResult.getCurrent());
+        return Result.success(result);
+    }
+
+    @ApiOperation("用户统计数据（学生/企业/教师数量）")
+    @GetMapping("/user/stats")
+    public Result<Map<String, Object>> userStats(HttpServletRequest request) {
+        if (!isTeacher(request)) return Result.error(403, "无权限访问");
+        return Result.success(adminService.userStats());
+    }
+
+    @ApiOperation("切换用户状态（1启用/2禁用）")
+    @PutMapping("/user/status/{id}")
+    public Result<String> toggleUserStatus(
+            HttpServletRequest request,
+            @PathVariable Long id,
+            @RequestParam Integer status) {
+        if (!isTeacher(request)) return Result.error(403, "无权限访问");
+        boolean success = adminService.toggleUserStatus(id, status);
+        if (!success) return Result.error("操作失败");
+        return Result.success("操作成功");
+    }
 }

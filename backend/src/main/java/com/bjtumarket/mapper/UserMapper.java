@@ -19,4 +19,7 @@ public interface UserMapper extends BaseMapper<User> {
 
     @Select("SELECT COUNT(*) FROM t_user WHERE user_type = 2 AND status = 0")
     long countPendingEnterprises();
+
+    @Select("SELECT COUNT(*) FROM t_user WHERE user_type = 3")
+    long countTeachers();
 }

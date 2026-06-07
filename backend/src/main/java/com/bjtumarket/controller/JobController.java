@@ -117,4 +117,10 @@ public class JobController {
         result.put("total", pageResult.getTotal());
         return Result.success(result);
     }
+
+    @ApiOperation("岗位地图数据（按城市聚合统计）")
+    @GetMapping("/map")
+    public Result<List<Map<String, Object>>> jobMap() {
+        return Result.success(jobService.getJobMapData());
+    }
 }
